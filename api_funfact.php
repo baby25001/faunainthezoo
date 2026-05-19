@@ -32,7 +32,7 @@ if ($response === false) {
 $data = json_decode($response, true);
 
 echo json_encode([
-    'fact'  => $data['extract']             ?? 'Tidak ada deskripsi.',
+    'fact'  => $data['extract'] ?? 'Tidak ada deskripsi.',
     'image' => $data['thumbnail']['source'] ?? null,
     'wiki'  => $data['content_urls']['desktop']['page'] ?? null
 ]);
