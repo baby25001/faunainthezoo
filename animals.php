@@ -54,7 +54,7 @@ if (getRole() === 'zookeeper') {
 <head>
     <meta charset="UTF-8">
     <title>Daftar Hewan — Fauna in the Zoo</title>
-    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="stylesheet" href="./assets/css/style.css">
 </head>
 <body>
 
