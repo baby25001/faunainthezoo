@@ -94,3 +94,20 @@ function loadFunFact(animalName) {
             if (el) el.textContent = 'Fun fact tidak tersedia.';
         });
 }
+
+// ── TAB MANAGE ───────────────────────────────────────────
+
+function showTab(name) {
+    // Sembunyikan semua tab content
+    document.querySelectorAll('.tab-content').forEach(t => {
+        t.classList.remove('active');
+    });
+    // Nonaktifkan semua tab button
+    document.querySelectorAll('.tab-btn').forEach(b => {
+        b.classList.remove('active');
+    });
+    // Tampilkan tab yang dipilih
+    document.getElementById('tab-' + name).classList.add('active');
+    // Aktifkan button yang diklik
+    event.target.classList.add('active');
+}
