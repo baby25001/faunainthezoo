@@ -1,48 +1,110 @@
+// ── LOAD CARD THUMBNAILS ─────────────────────────────────
+
+document.addEventListener('DOMContentLoaded', function () {
+    loadAnimalThumbnails();
+});
+
+function loadAnimalThumbnails() {
+    const images = document.querySelectorAll('.animal-thumb');
+
+    images.forEach(image => {
+        const animalName = image.dataset.name;
+        const species = image.dataset.species;
+
+        const url = 'api_funfact.php?name=' + encodeURIComponent(animalName) +'&species=' + encodeURIComponent(species || '');
+
+        fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                if (data.image) {
+                    image.src = data.image;
+                }
+            })
+            .catch(() => {
+                image.src = 'assets/img/no-image.png';
+            });
+    });
+}
+
 // ── MODAL ────────────────────────────────────────────────
 
 function openModal(animalId) {
-    document.getElementById('modal-overlay').classList.add('active');
-    document.getElementById('modal-content').innerHTML = 
-        '<div class="modal-loading">⏳ Memuat data...</div>';
+    const modal = document.getElementById('modal-overlay');
+    const content = document.getElementById('modal-content');
 
-    // Ambil detail hewan via AJAX
-    fetch('get_animal.php?id=' + animalId)
-        .then(res => res.json())
-        .then(data => {
-            renderModal(data);
-            // Setelah data hewan tampil, ambil fun fact Wikipedia
-            loadFunFact(data.animal_name);
+    modal.classList.add('active');
+
+    content.innerHTML = `
+        <div class="modal-loading">
+            ⏳ Memuat data...
+        </div>
+    `;
+
+    fetch('get_animal.php?id=' + encodeURIComponent(animalId))
+        .then(response => response.json())
+        .then(animal => {
+            if (!animal || Object.keys(animal).length === 0) {
+                content.innerHTML = `
+                    <p style="color:red">
+                        Data hewan tidak ditemukan.
+                    </p>
+                `;
+                return;
+            }
+
+            renderModal(animal);
+
+            loadFunFact(
+                animal.animal_name,
+                animal.species
+            );
         })
-        .catch(() => {
-            document.getElementById('modal-content').innerHTML =
-                '<p style="color:red">Gagal memuat data.</p>';
+        .catch(error => {
+            console.error(error);
+
+            content.innerHTML = `
+                <p style="color:red">
+                    Gagal memuat data.
+                </p>
+            `;
         });
 }
 
 function closeModal() {
-    document.getElementById('modal-overlay').classList.remove('active');
+    document
+        .getElementById('modal-overlay')
+        .classList
+        .remove('active');
 }
 
-// Tutup modal kalau tekan ESC
-document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') closeModal();
+document.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape') {
+        closeModal();
+    }
 });
 
-// ── RENDER ISI MODAL ─────────────────────────────────────
+// ── RENDER MODAL ─────────────────────────────────────────
 
-function renderModal(a) {
-    const statusBadge = a.status === 'done'
-        ? '<span class="badge-done">✅ Sudah diberi makan</span>'
-        : '<span class="badge-pending">🕐 Belum diberi makan</span>';
+function renderModal(animal) {
+    const statusBadge =
+        animal.status === 'done'
+            ? '<span class="badge-done">✅ Sudah diberi makan</span>'
+            : '<span class="badge-pending">🕐 Belum diberi makan</span>';
 
     document.getElementById('modal-content').innerHTML = `
         <div class="modal-header">
-            <img src="${a.image_url || ''}" 
-                 alt="${a.animal_name}"
-                 onerror="this.style.display='none'">
+            <div class="modal-image-wrap">
+                <img
+                    id="modal-animal-img"
+                    src="assets/img/no-image.png"
+                    alt="${escapeHtml(animal.animal_name)}"
+                    onerror="this.src='assets/img/no-image.png'"
+                >
+            </div>
+
             <div class="modal-title-wrap">
-                <h2>${a.animal_name}</h2>
-                <p><em>${a.species}</em></p>
+                <h2>${escapeHtml(animal.animal_name)}</h2>
+                <p><em>${escapeHtml(animal.species || '-')}</em></p>
                 ${statusBadge}
             </div>
         </div>
@@ -50,64 +112,109 @@ function renderModal(a) {
         <div class="modal-info">
             <div class="info-row">
                 <span>🌍 Habitat</span>
-                <strong>${a.habitat_name} (${a.temperature})</strong>
+                <strong>
+                    ${escapeHtml(animal.habitat_name || '-')}
+                    (${escapeHtml(animal.temperature || '-')})
+                </strong>
             </div>
+
             <div class="info-row">
                 <span>🍽️ Makanan</span>
-                <strong>${a.foods || '-'}</strong>
+                <strong>${escapeHtml(animal.foods || '-')}</strong>
             </div>
+
             <div class="info-row">
                 <span>⏰ Jadwal makan</span>
-                <strong>${a.schedule || 'Belum dijadwalkan'}</strong>
+                <strong>${escapeHtml(animal.schedule || 'Belum dijadwalkan')}</strong>
             </div>
         </div>
 
         <div class="modal-funfact">
             <h4>📖 Fun Fact</h4>
             <p id="funfact-text">Memuat fun fact...</p>
-            <a id="funfact-link" href="#" target="_blank" 
-               style="display:none; font-size:12px; color:#2E7D32">
+
+            <a
+                id="funfact-link"
+                href="#"
+                target="_blank"
+                rel="noopener noreferrer"
+                style="display:none; font-size:12px; color:#2E7D32"
+            >
                 Baca selengkapnya di Wikipedia →
             </a>
         </div>
     `;
 }
 
-// ── WIKIPEDIA FUN FACT ────────────────────────────────────
+// ── LOAD FUN FACT MODAL ──────────────────────────────────
 
-function loadFunFact(animalName) {
-    fetch('api_funfact.php?name=' + encodeURIComponent(animalName))
-        .then(res => res.json())
+function loadFunFact(animalName, species) {
+    const url =
+        'api_funfact.php?name=' +
+        encodeURIComponent(animalName) +
+        '&species=' +
+        encodeURIComponent(species || '');
+
+    fetch(url)
+        .then(response => response.json())
         .then(data => {
-            const el = document.getElementById('funfact-text');
+            const text = document.getElementById('funfact-text');
             const link = document.getElementById('funfact-link');
-            if (el) {
-                el.textContent = data.fact;
-                if (data.wiki && link) {
-                    link.href = data.wiki;
-                    link.style.display = 'inline';
-                }
+            const image = document.getElementById('modal-animal-img');
+
+            if (text) {
+                text.textContent = data.fact || 'Fun fact tidak tersedia.';
+            }
+
+            if (image && data.image) {
+                image.src = data.image;
+            }
+
+            if (link && data.wiki) {
+                link.href = data.wiki;
+                link.style.display = 'inline';
             }
         })
-        .catch(() => {
-            const el = document.getElementById('funfact-text');
-            if (el) el.textContent = 'Fun fact tidak tersedia.';
+        .catch(error => {
+            console.error(error);
+
+            const text = document.getElementById('funfact-text');
+
+            if (text) {
+                text.textContent = 'Fun fact tidak tersedia.';
+            }
         });
 }
 
 // ── TAB MANAGE ───────────────────────────────────────────
 
 function showTab(name) {
-    // Sembunyikan semua tab content
-    document.querySelectorAll('.tab-content').forEach(t => {
-        t.classList.remove('active');
+    document.querySelectorAll('.tab-content').forEach(tab => {
+        tab.classList.remove('active');
     });
-    // Nonaktifkan semua tab button
-    document.querySelectorAll('.tab-btn').forEach(b => {
-        b.classList.remove('active');
+
+    document.querySelectorAll('.tab-btn').forEach(button => {
+        button.classList.remove('active');
     });
-    // Tampilkan tab yang dipilih
-    document.getElementById('tab-' + name).classList.add('active');
-    // Aktifkan button yang diklik
-    event.target.classList.add('active');
+
+    const selectedTab = document.getElementById('tab-' + name);
+
+    if (selectedTab) {
+        selectedTab.classList.add('active');
+    }
+
+    if (event && event.target) {
+        event.target.classList.add('active');
+    }
+}
+
+// ── SECURITY HELPER ──────────────────────────────────────
+
+function escapeHtml(value) {
+    return String(value)
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#039;');
 }

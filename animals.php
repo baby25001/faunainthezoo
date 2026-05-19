@@ -7,6 +7,7 @@ $query = "
     SELECT
         a.id_animal,
         a.animal_name,
+        a.image_url,
         a.species,
         h.habitat_name,
         h.temperature,
@@ -109,6 +110,19 @@ if (getRole() === 'zookeeper') {
                 class="animal-card <?= $is_done ? 'card-done' : '' ?>"
                 onclick="openModal(<?= (int) $animal['id_animal'] ?>)"
             >
+                <div class="card-img-wrap">
+                    <img
+                        id="animal-img-<?= (int) $animal['id_animal'] ?>"
+                        class="animal-thumb"
+                        src="assets/img/no-image.png"
+                        alt="<?= htmlspecialchars($animal['animal_name']) ?>"
+                        loading="lazy"
+                        data-name="<?= htmlspecialchars($animal['animal_name']) ?>"
+                        data-species="<?= htmlspecialchars($animal['species']) ?>"
+                        onerror="this.src='assets/img/no-image.png'"
+                    >
+                </div>
+
                 <div class="card-status">
                     <?php if ($is_done): ?>
                         <span class="badge-done">✅ Sudah Makan</span>
@@ -119,12 +133,17 @@ if (getRole() === 'zookeeper') {
 
                 <div class="card-body">
                     <h3><?= htmlspecialchars($animal['animal_name']) ?></h3>
+
                     <p class="species">
                         <em><?= htmlspecialchars($animal['species']) ?></em>
                     </p>
+
                     <p class="habitat">🌍 <?= htmlspecialchars($animal['habitat_name']) ?></p>
                     <p class="temp">🌡️ <?= htmlspecialchars($animal['temperature']) ?></p>
-                    <p class="foods">🍽️ <?= htmlspecialchars($animal['foods'] ?? 'Belum ada data') ?></p>
+
+                    <p class="foods">
+                        🍽️ <?= htmlspecialchars($animal['foods'] ?? 'Belum ada data') ?>
+                    </p>
                 </div>
             </div>
         <?php endforeach; ?>
