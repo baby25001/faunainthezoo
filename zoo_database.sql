@@ -179,7 +179,7 @@ INSERT INTO pemberian_pakan (id_animal, id_food, feeding_schedule, status) VALUE
 
 -- User default
 INSERT INTO users (username, password, role) VALUES
-('keeper1', '$2y$10$w7v0pI4ZpXbA3Mv8Q3O3O.uG2hR9K6mN5FzE7qL6tO9bW8c7v6u1a', 'zookeeper');
+('keeper1', '5d713dcf7d57088dd32352cfdaa03e88', 'zookeeper');
 
 -- 3. Nyalakan kembali pengecekan Foreign Key demi keamanan data kedepannya
 SET FOREIGN_KEY_CHECKS = 1;
