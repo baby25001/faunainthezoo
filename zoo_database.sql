@@ -28,7 +28,7 @@ CREATE TABLE IF NOT EXISTS animals (
     animal_name VARCHAR(100) NOT NULL,
     species     VARCHAR(100) NOT NULL,
     id_habitat  INT NOT NULL,
-    image_url   VARCHAR(255),
+    image_url   VARCHAR(512),
     FOREIGN KEY (id_habitat) REFERENCES habitats(id_habitat)
         ON DELETE CASCADE ON UPDATE CASCADE
 );
@@ -112,31 +112,31 @@ INSERT INTO foods (foods_name, nutrition) VALUES
 ('Daun muda',       'Vitamin, Mineral, Serat');
 
 INSERT INTO animals (animal_name, species, id_habitat, image_url) VALUES
-('African Lion',      'Panthera leo',                1, 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/73/Lion_waiting_in_Namibia.jpg/320px-Lion_waiting_in_Namibia.jpg'),
-('African Elephant',  'Loxodonta africana',          1, 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/37/African_Bush_Elephant.jpg/320px-African_Bush_Elephant.jpg'),
-('Giraffe',           'Giraffa camelopardalis',      1, 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/9e/Giraffe_Mikumi_National_Park.jpg/240px-Giraffe_Mikumi_National_Park.jpg'),
-('Zebra',             'Equus quagga',                1, 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e3/Plains_Zebra_Equus_quagga.jpg/320px-Plains_Zebra_Equus_quagga.jpg'),
-('Cheetah',           'Acinonyx jubatus',            1, 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/09/TheCheethcat.jpg/320px-TheCheethcat.jpg'),
-('Polar Bear',        'Ursus maritimus',             2, 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/66/Polar_Bear_-_Alaska_%28cropped%29.jpg/320px-Polar_Bear_-_Alaska_%28cropped%29.jpg'),
-('Arctic Fox',        'Vulpes lagopus',              2, 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8f/Arctic_Fox_in_November.jpg/320px-Arctic_Fox_in_November.jpg'),
-('Orangutan',         'Pongo pygmaeus',              3, 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/be/Orang_Utan%2C_Semenggok_Forest_Reserve%2C_Sarawak%2C_Borneo%2C_Malaysia.JPG/240px-Orang_Utan%2C_Semenggok_Forest_Reserve%2C_Sarawak%2C_Borneo%2C_Malaysia.JPG'),
-('Bengal Tiger',      'Panthera tigris tigris',      3, 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/17/Tiger_in_Ranthambhore.jpg/320px-Tiger_in_Ranthambhore.jpg'),
-('Gorilla',           'Gorilla gorilla',             3, 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/bb/Gorille_des_plaines_de_l%27ouest_%28Le_Zoo_de_Vincennes%29_%2814812043112%29.jpg/240px-Gorille_des_plaines_de_l%27ouest_%28Le_Zoo_de_Vincennes%29_%2814812043112%29.jpg'),
-('Flamingo',          'Phoenicopterus roseus',       4, 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a6/Pink_flamingo_2.jpg/240px-Pink_flamingo_2.jpg'),
-('Nile Crocodile',    'Crocodylus niloticus',        4, 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a2/Nile_crocodile_head.jpg/320px-Nile_crocodile_head.jpg'),
-('Hippopotamus',      'Hippopotamus amphibius',      4, 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a9/Hippo_at_SF_Zoo.jpg/320px-Hippo_at_SF_Zoo.jpg'),
-('Snow Leopard',      'Panthera uncia',              5, 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3b/Snow_leopard_%28Panthera_uncia%29_in_the_Toronto_Zoo_1.jpg/320px-Snow_leopard_%28Panthera_uncia%29_in_the_Toronto_Zoo_1.jpg'),
-('Bald Eagle',        'Haliaeetus leucocephalus',    5, 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1e/Bald_Eagle_Portrait.jpg/240px-Bald_Eagle_Portrait.jpg'),
-('Komodo Dragon',     'Varanus komodoensis',         6, 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Komodo_dragon_with_tongue.jpg/320px-Komodo_dragon_with_tongue.jpg'),
-('Giant Tortoise',    'Chelonoidis niger',           6, 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a1/Giant_Tortoise_Chelonoidis_nigra.jpg/320px-Giant_Tortoise_Chelonoidis_nigra.jpg'),
-('African Penguin',   'Spheniscus demersus',         7, 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/02/African_Penguin_%28Spheniscus_demersus%29_at_Boulders_Beach.jpg/240px-African_Penguin_%28Spheniscus_demersus%29_at_Boulders_Beach.jpg'),
-('Bottlenose Dolphin','Tursiops truncatus',          8, 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/10/Tursiops_truncatus_01.jpg/320px-Tursiops_truncatus_01.jpg'),
-('Red Panda',         'Ailurus fulgens',             3, 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/50/RedPandaFull_gringer.jpg/320px-RedPandaFull_gringer.jpg'),
-('Giant Panda',       'Ailuropoda melanoleuca',      3, 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/0f/Grosser_Panda.JPG/320px-Grosser_Panda.JPG'),
-('Meerkat',           'Suricata suricatta',          1, 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b6/Meerkat_%28Suricata_suricatta%29_Tswalu.jpg/240px-Meerkat_%28Suricata_suricatta%29_Tswalu.jpg'),
-('Mandrill',          'Mandrillus sphinx',           3, 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/71/Mandrill_at_Bristol_Zoo.jpg/240px-Mandrill_at_Bristol_Zoo.jpg'),
-('African Wild Dog',  'Lycaon pictus',               1, 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8f/African_Wild_Dog.jpg/320px-African_Wild_Dog.jpg'),
-('Reticulated Python','Malayopython reticulatus',    3, 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/59/Malayopython_reticulatus_2019.jpg/320px-Malayopython_reticulatus_2019.jpg');
+('African Lion',      'Panthera leo',                1, 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a6/020_The_lion_king_Snyggve_in_the_Serengeti_National_Park_Photo_by_Giles_Laurent.jpg/330px-020_The_lion_king_Snyggve_in_the_Serengeti_National_Park_Photo_by_Giles_Laurent.jpg'),
+('African Elephant',  'Loxodonta africana',          1, 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/bf/African_Elephant_%28Loxodonta_africana%29_male_%2817289351322%29.jpg/330px-African_Elephant_%28Loxodonta_africana%29_male_%2817289351322%29.jpg'),
+('Giraffe',           'Giraffa camelopardalis',      1, 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/9e/Giraffe_Mikumi_National_Park.jpg/330px-Giraffe_Mikumi_National_Park.jpg'),
+('Zebra',             'Equus quagga',                1, 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/96/Plains_Zebra_Equus_quagga_cropped.jpg/330px-Plains_Zebra_Equus_quagga_cropped.jpg'),
+('Cheetah',           'Acinonyx jubatus',            1, 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/92/Male_cheetah_facing_left_in_South_Africa.jpg/330px-Male_cheetah_facing_left_in_South_Africa.jpg'),
+('Polar Bear',        'Ursus maritimus',             2, 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/66/Polar_Bear_-_Alaska_%28cropped%29.jpg/330px-Polar_Bear_-_Alaska_%28cropped%29.jpg'),
+('Arctic Fox',        'Vulpes lagopus',              2, 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/dc/Vulpes_lagopus_in_Iceland_%28cropped_3%29.jpg/330px-Vulpes_lagopus_in_Iceland_%28cropped_3%29.jpg'),
+('Orangutan',         'Pongo pygmaeus',              3, 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/be/Orang_Utan%2C_Semenggok_Forest_Reserve%2C_Sarawak%2C_Borneo%2C_Malaysia.JPG/330px-Orang_Utan%2C_Semenggok_Forest_Reserve%2C_Sarawak%2C_Borneo%2C_Malaysia.JPG'),
+('Bengal Tiger',      'Panthera tigris tigris',      3, 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/84/Bengal_tiger_in_Sanjay_Dubri_Tiger_Reserve_December_2024_by_Tisha_Mukherjee_11.jpg/330px-Bengal_tiger_in_Sanjay_Dubri_Tiger_Reserve_December_2024_by_Tisha_Mukherjee_11.jpg'),
+('Gorilla',           'Gorilla gorilla',             3, 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/bb/Gorille_des_plaines_de_l%27ouest_%C3%A0_l%27Espace_Zoologique.jpg/330px-Gorille_des_plaines_de_l%27ouest_%C3%A0_l%27Espace_Zoologique.jpg'),
+('Flamingo',          'Phoenicopterus roseus',       4, 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/38/Flamingos_Laguna_Colorada.jpg/330px-Flamingos_Laguna_Colorada.jpg'),
+('Nile Crocodile',    'Crocodylus niloticus',        4, 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/81/NileCrocodile.jpg/330px-NileCrocodile.jpg'),
+('Hippopotamus',      'Hippopotamus amphibius',      4, 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f2/Portrait_Hippopotamus_in_the_water.jpg/330px-Portrait_Hippopotamus_in_the_water.jpg'),
+('Snow Leopard',      'Panthera uncia',              5, 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a5/Irbis4.JPG/330px-Irbis4.JPG'),
+('Bald Eagle',        'Haliaeetus leucocephalus',    5, 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/db/Bald_eagle_about_to_fly_in_Alaska_%282016%29.jpg/330px-Bald_eagle_about_to_fly_in_Alaska_%282016%29.jpg'),
+('Komodo Dragon',     'Varanus komodoensis',         6, 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f5/202306_Varanus_komodoensis.jpg/330px-202306_Varanus_komodoensis.jpg'),
+('Giant Tortoise',    'Chelonoidis niger',           6, 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/aa/A._gigantea_Aldabra_Giant_Tortoise.jpg/330px-A._gigantea_Aldabra_Giant_Tortoise.jpg'),
+('African Penguin',   'Spheniscus demersus',         7, 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/55/Wikimania_2018%2C_Cape_Town_%28_1050602%29%2C_crop.jpg/330px-Wikimania_2018%2C_Cape_Town_%28_1050602%29%2C_crop.jpg'),
+('Bottlenose Dolphin','Tursiops truncatus',          8, 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/10/Tursiops_truncatus_01.jpg/330px-Tursiops_truncatus_01.jpg'),
+('Red Panda',         'Ailurus fulgens',             3, 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/fd/Red_Panda%2C_Gentle_Tree-Dweller_of_the_Himalayas.jpg/330px-Red_Panda%2C_Gentle_Tree-Dweller_of_the_Himalayas.jpg'),
+('Giant Panda',       'Ailuropoda melanoleuca',      3, 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/0f/Grosser_Panda.JPG/330px-Grosser_Panda.JPG'),
+('Meerkat',           'Suricata suricatta',          1, 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/9a/Meerkat_%28Suricata_suricatta%29_Tswalu.jpg/330px-Meerkat_%28Suricata_suricatta%29_Tswalu.jpg'),
+('Mandrill',          'Mandrillus sphinx',           3, 'https://upload.wikimedia.org/wikipedia/commons/e/ed/Mandrill_Albert_September_2015_Zoo_Berlin_%282%29.jpg'),
+('African Wild Dog',  'Lycaon pictus',               1, 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/75/African_Wild_Dog_at_Working_with_Wildlife.jpg/330px-African_Wild_Dog_at_Working_with_Wildlife.jpg'),
+('Reticulated Python','Malayopython reticulatus',    3, 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b4/Python_reticulatus_%D1%81%D0%B5%D1%82%D1%87%D0%B0%D1%82%D1%8B%D0%B9_%D0%BF%D0%B8%D1%82%D0%BE%D0%BD-2.jpg/330px-Python_reticulatus_%D1%81%D0%B5%D1%82%D1%87%D0%B0%D1%82%D1%8B%D0%B9_%D0%BF%D0%B8%D1%82%D0%BE%D0%BD-2.jpg  ');
 
 -- Relasi memakan
 INSERT INTO memakan (id_animal, id_food) VALUES
@@ -179,8 +179,8 @@ INSERT INTO pemberian_pakan (id_animal, id_food, feeding_schedule, status) VALUE
 
 -- User default
 INSERT INTO users (username, password, role) VALUES
-('keeper1',  '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'zookeeper'),
-('visitor1', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'visitor');
+('keeper1',  '$2y$10$l4w9q9ndq2tRlOuQ7p2qAOfNpnu27/0.kO4t49NLQmexVoGn8Whwe', 'zookeeper'),
+('visitor1', '$2y$10$l4w9q9ndq2tRlOuQ7p2qAOfNpnu27/0.kO4t49NLQmexVoGn8Whwe', 'visitor');
 
 -- 3. Nyalakan kembali pengecekan Foreign Key demi keamanan data kedepannya
 SET FOREIGN_KEY_CHECKS = 1;

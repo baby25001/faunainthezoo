@@ -1,0 +1,907 @@
+<?php
+require_once 'includes/db.php';
+require_once 'includes/auth.php';
+requireLogin();
+?>
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ticketing & Booking — Fauna in the Zoo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { outfit: ['Outfit', 'sans-serif'] },
+                    colors: {
+                        zoo: {
+                            50:'#f0fdf4', 100:'#dcfce7', 200:'#bbf7d0', 300:'#86efac',
+                            400:'#4ade80', 500:'#22c55e', 600:'#16a34a', 700:'#15803d',
+                            800:'#166534', 900:'#14532d', 950:'#052e16',
+                        }
+                    },
+                    animation: {
+                        'fade-in':   'fadeIn 0.5s ease-out forwards',
+                        'slide-up':  'slideUp 0.5s ease-out forwards',
+                        'slide-in-right': 'slideInRight 0.4s ease-out forwards',
+                        'float':     'float 3s ease-in-out infinite',
+                        'pulse-slow':'pulse 2.5s cubic-bezier(0.4,0,0.6,1) infinite',
+                        'ticket-appear': 'ticketAppear 0.6s cubic-bezier(0.34,1.56,0.64,1) forwards',
+                    },
+                    keyframes: {
+                        fadeIn:      { '0%': { opacity:'0' }, '100%': { opacity:'1' } },
+                        slideUp:     { '0%': { opacity:'0', transform:'translateY(24px)' }, '100%': { opacity:'1', transform:'translateY(0)' } },
+                        slideInRight:{ '0%': { opacity:'0', transform:'translateX(20px)' }, '100%': { opacity:'1', transform:'translateX(0)' } },
+                        float:       { '0%,100%': { transform:'translateY(0)' }, '50%': { transform:'translateY(-10px)' } },
+                        ticketAppear:{ '0%': { opacity:'0', transform:'scale(0.9) translateY(10px)' }, '100%': { opacity:'1', transform:'scale(1) translateY(0)' } },
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        body { font-family: 'Outfit', sans-serif; }
+        .glass-nav { backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+
+        /* Ticket type card */
+        .ticket-type-card {
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            border: 1.5px solid #e2e8f0;
+        }
+        .ticket-type-card:hover {
+            transform: translateY(-2px);
+            border-color: #cbd5e1;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.04);
+        }
+        .ticket-type-card.selected {
+            background-color: #f0fdf4 !important;
+            border-color: #166534 !important;
+            box-shadow: 0 4px 15px rgba(22,101,52,0.08);
+            transform: translateY(-2px);
+        }
+        .ticket-type-card.selected .price-tag {
+            color: #15803d !important;
+        }
+        .ticket-type-card.selected .type-icon {
+            background-color: #166534 !important;
+            color: white !important;
+        }
+
+        /* Time slot */
+        .time-slot {
+            transition: all 0.2s ease;
+            cursor: pointer;
+            border: 1.5px solid #e2e8f0;
+        }
+        .time-slot:hover {
+            border-color: #cbd5e1;
+            background: #f8fafc;
+        }
+        .time-slot.selected {
+            background: #f0fdf4 !important;
+            border-color: #166534 !important;
+            box-shadow: 0 4px 12px rgba(22,101,52,0.06);
+        }
+        .time-slot.selected p:first-child {
+            color: #166534 !important;
+        }
+
+        /* Dot pattern bg */
+        .dot-bg {
+            background-image: radial-gradient(circle, rgba(255,255,255,0.12) 1px, transparent 1px);
+            background-size: 24px 24px;
+        }
+
+        /* Print styling for layout ticket */
+        @media print {
+            body {
+                background: white !important;
+                color: #000 !important;
+                font-size: 12px;
+            }
+            /* Hide non-ticket elements */
+            nav,
+            .bg-gradient-to-br,
+            .max-w-7xl,
+            .mt-10,
+            #booking-summary-card,
+            .print-instructions + div {
+                display: none !important;
+            }
+            #ticket-pdf-content {
+                display: block !important;
+                margin: 0 auto !important;
+                padding: 0 !important;
+                box-shadow: none !important;
+                border: none !important;
+                max-width: 550px !important;
+                width: 100% !important;
+                animation: none !important;
+                opacity: 1 !important;
+                transform: none !important;
+            }
+            .print-instructions {
+                display: block !important;
+            }
+            .ticket-notch-top, .ticket-notch-bottom {
+                background-color: #ffffff !important;
+                border-color: #166534 !important;
+            }
+        }
+
+        /* Disable all animations for PDF generation */
+        .no-print-animations,
+        .no-print-animations *,
+        .no-print-animations::before,
+        .no-print-animations::after,
+        .no-print-animations *::before,
+        .no-print-animations *::after {
+            animation: none !important;
+            transition: none !important;
+            opacity: 1 !important;
+            transform: none !important;
+        }
+        .no-print-animations .ticket-notch-top,
+        .no-print-animations .ticket-notch-bottom {
+            background-color: #ffffff !important;
+        }
+    </style>
+</head>
+<body class="bg-zoo-50 min-h-screen">
+
+<!-- ── NAVBAR ─────────────────────────── -->
+<nav class="bg-[#1b5e20] sticky top-0 z-50 shadow-md">
+    <div class="max-w-7xl mx-auto px-5 flex items-center justify-between h-16">
+        <!-- Brand -->
+        <a href="animals.php" class="flex items-center gap-2 text-white font-extrabold text-lg tracking-wide hover:opacity-95 transition-opacity">
+            <span class="text-2xl">🐯</span>Fauna in the Zoo
+        </a>
+
+        <!-- Links -->
+        <div class="hidden md:flex items-center gap-2 text-sm font-semibold text-white/90">
+            <a href="animals.php" class="<?= basename($_SERVER['PHP_SELF']) === 'animals.php' ? 'bg-[#2e7d32] text-white' : 'hover:text-white transition-colors' ?> px-4 py-1.5 rounded-full">Dashboard</a>
+            <a href="habitats.php" class="<?= basename($_SERVER['PHP_SELF']) === 'habitats.php' ? 'bg-[#2e7d32] text-white' : 'hover:text-white transition-colors' ?> px-4 py-1.5 rounded-full">Habitats</a>
+            <?php if (getRole() === 'zookeeper'): ?>
+            <a href="schedule.php" class="<?= basename($_SERVER['PHP_SELF']) === 'schedule.php' ? 'bg-[#2e7d32] text-white' : 'hover:text-white transition-colors' ?> px-4 py-1.5 rounded-full">Schedule</a>
+            <a href="manage.php"   class="<?= basename($_SERVER['PHP_SELF']) === 'manage.php' ? 'bg-[#2e7d32] text-white' : 'hover:text-white transition-colors' ?> px-4 py-1.5 rounded-full">Manage</a>
+            <?php endif; ?>
+        </div>
+
+        <!-- Right Buttons -->
+        <div class="flex items-center gap-3 text-sm font-semibold">
+            <span class="text-[#c8e6c9] hidden sm:flex items-center gap-1.5 mr-2">
+                <i class="fa-regular fa-user"></i> <?= htmlspecialchars($_SESSION['username']) ?>
+            </span>
+            <a href="ticket.php"
+               class="<?= basename($_SERVER['PHP_SELF']) === 'ticket.php' ? 'bg-[#15803d]' : 'bg-[#22c55e] hover:bg-[#15803d]' ?> text-white px-5 py-2 rounded-full transition-all shadow-sm">
+                Buy Ticket
+            </a>
+            <a href="logout.php"
+               class="bg-[#ef4444] hover:bg-[#b91c1c] text-white px-5 py-2 rounded-full transition-all shadow-sm">
+                Logout
+            </a>
+        </div>
+    </div>
+</nav>
+
+<!-- ── HERO HEADER ─────────────────────────── -->
+<div class="bg-gradient-to-br from-zoo-900 via-zoo-800 to-emerald-700 text-white relative overflow-hidden">
+    <div class="dot-bg absolute inset-0"></div>
+
+    <!-- Decorative blobs -->
+    <div class="absolute -top-20 -right-20 w-64 h-64 bg-zoo-600/30 rounded-full blur-3xl pointer-events-none"></div>
+    <div class="absolute -bottom-10 -left-10 w-48 h-48 bg-emerald-500/20 rounded-full blur-3xl pointer-events-none"></div>
+
+    <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div class="flex flex-col md:flex-row items-center justify-between gap-6">
+            <div class="animate-slide-up text-center md:text-left">
+                <div class="inline-flex items-center gap-2 bg-white/10 border border-white/20 rounded-full px-4 py-1.5 text-xs font-semibold text-zoo-200 mb-4">
+                    <i class="fa-solid fa-ticket text-zoo-300"></i>
+                    Beli Tiket Online
+                </div>
+                <h1 class="text-3xl sm:text-4xl lg:text-5xl font-bold mb-3 leading-tight">
+                    🎟️ Ticketing &amp;<br class="hidden sm:block"> Booking
+                </h1>
+                <p class="text-zoo-200 text-base sm:text-lg max-w-lg">
+                    Pesan tiket kebun binatangmu sekarang dan nikmati petualangan seru tanpa antre!
+                </p>
+                <div class="flex flex-wrap gap-3 mt-5 justify-center md:justify-start">
+                    <div class="flex items-center gap-1.5 text-zoo-300 text-sm">
+                        <i class="fa-solid fa-bolt text-yellow-400"></i> Instan
+                    </div>
+                    <div class="flex items-center gap-1.5 text-zoo-300 text-sm">
+                        <i class="fa-solid fa-shield-halved text-zoo-300"></i> Aman
+                    </div>
+                    <div class="flex items-center gap-1.5 text-zoo-300 text-sm">
+                        <i class="fa-solid fa-qrcode text-zoo-300"></i> E-Ticket
+                    </div>
+                </div>
+            </div>
+            <div class="animate-float shrink-0 hidden md:block">
+                <div class="w-40 h-40 bg-white/5 border border-white/10 rounded-3xl flex items-center justify-center backdrop-blur-sm">
+                    <span class="text-8xl">🦁</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ── MAIN BOOKING FORM ─────────────────────── -->
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
+
+        <!-- ════════════ LEFT: FORM (3/5) ════════════ -->
+        <div class="lg:col-span-3 space-y-5 animate-slide-up">
+
+            <!-- Step 1: Ticket Type -->
+            <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
+                <div class="flex items-center gap-3 mb-5">
+                    <div class="w-8 h-8 bg-zoo-600 text-white rounded-full flex items-center justify-center text-sm font-bold shadow">1</div>
+                    <h2 class="font-bold text-zoo-900 text-lg">Pilih Jenis Tiket</h2>
+                </div>
+
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3" id="ticket-type-grid">
+                    <!-- Adult -->
+                    <div class="ticket-type-card selected border-2 border-zoo-700 bg-zoo-700 text-white rounded-xl p-4 text-center" data-type="adult" onclick="selectTicketType('adult')">
+                        <div class="type-icon w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center mx-auto mb-2">
+                            <i class="fa-solid fa-person text-lg"></i>
+                        </div>
+                        <p class="font-bold text-sm">Dewasa</p>
+                        <p class="price-tag font-bold text-zoo-300 text-lg mt-0.5">$7<span class="text-xs font-normal">/orang</span></p>
+                    </div>
+                    <!-- Child -->
+                    <div class="ticket-type-card border-2 border-slate-200 bg-white text-slate-700 rounded-xl p-4 text-center" data-type="child" onclick="selectTicketType('child')">
+                        <div class="type-icon w-10 h-10 bg-zoo-50 text-zoo-600 rounded-xl flex items-center justify-center mx-auto mb-2">
+                            <i class="fa-solid fa-child text-lg"></i>
+                        </div>
+                        <p class="font-bold text-sm">Anak</p>
+                        <p class="text-xs text-slate-400 -mt-0.5">3–12 tahun</p>
+                        <p class="price-tag font-bold text-zoo-600 text-lg mt-0.5">$5<span class="text-xs font-normal">/orang</span></p>
+                    </div>
+                    <!-- Student -->
+                    <div class="ticket-type-card border-2 border-slate-200 bg-white text-slate-700 rounded-xl p-4 text-center" data-type="student" onclick="selectTicketType('student')">
+                        <div class="type-icon w-10 h-10 bg-zoo-50 text-zoo-600 rounded-xl flex items-center justify-center mx-auto mb-2">
+                            <i class="fa-solid fa-graduation-cap text-lg"></i>
+                        </div>
+                        <p class="font-bold text-sm">Pelajar</p>
+                        <p class="price-tag font-bold text-zoo-600 text-lg mt-0.5">$6<span class="text-xs font-normal">/orang</span></p>
+                    </div>
+                    <!-- Family -->
+                    <div class="ticket-type-card border-2 border-slate-200 bg-white text-slate-700 rounded-xl p-4 text-center relative overflow-hidden" data-type="family" onclick="selectTicketType('family')">
+                        <div class="absolute top-1.5 right-1.5 bg-amber-400 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full">HEMAT</div>
+                        <div class="type-icon w-10 h-10 bg-zoo-50 text-zoo-600 rounded-xl flex items-center justify-center mx-auto mb-2">
+                            <i class="fa-solid fa-people-roof text-lg"></i>
+                        </div>
+                        <p class="font-bold text-sm">Keluarga</p>
+                        <p class="text-[10px] text-slate-400 -mt-0.5">2 Dewasa + 1 Anak</p>
+                        <p class="price-tag font-bold text-zoo-600 text-lg mt-0.5">$19<span class="text-xs font-normal">/paket</span></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 2: Date & Time -->
+            <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
+                <div class="flex items-center gap-3 mb-5">
+                    <div class="w-8 h-8 bg-zoo-600 text-white rounded-full flex items-center justify-center text-sm font-bold shadow">2</div>
+                    <h2 class="font-bold text-zoo-900 text-lg">Tanggal &amp; Sesi Kunjungan</h2>
+                </div>
+
+                <!-- Date Picker -->
+                <div class="mb-5">
+                    <label class="block text-sm font-semibold text-zoo-700 mb-2">
+                        <i class="fa-regular fa-calendar mr-1.5"></i>Tanggal Kunjungan
+                    </label>
+                    <input
+                        type="date"
+                        id="visit-date"
+                        class="w-full border-2 border-slate-200 focus:border-zoo-500 rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-zoo-100 transition-all"
+                    >
+                </div>
+
+                <!-- Time Slots -->
+                <div>
+                    <label class="block text-sm font-semibold text-zoo-700 mb-3">
+                        <i class="fa-regular fa-clock mr-1.5"></i>Sesi Kunjungan
+                    </label>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3" id="time-slot-grid">
+                        <div class="time-slot selected border-2 border-zoo-700 rounded-xl p-3 text-center" data-slot="09:00" data-end="10:00" onclick="selectSlot(this)">
+                            <p class="font-bold text-sm text-white">09:00 AM</p>
+                            <p class="slot-sub text-xs text-zoo-300 mt-0.5">Pagi</p>
+                        </div>
+                        <div class="time-slot border-2 border-slate-200 rounded-xl p-3 text-center" data-slot="11:00" data-end="12:00" onclick="selectSlot(this)">
+                            <p class="font-bold text-sm text-slate-700">11:00 AM</p>
+                            <p class="slot-sub text-xs text-slate-400 mt-0.5">Siang Awal</p>
+                        </div>
+                        <div class="time-slot border-2 border-slate-200 rounded-xl p-3 text-center" data-slot="13:00" data-end="14:00" onclick="selectSlot(this)">
+                            <p class="font-bold text-sm text-slate-700">01:00 PM</p>
+                            <p class="slot-sub text-xs text-slate-400 mt-0.5">Siang</p>
+                        </div>
+                        <div class="time-slot border-2 border-slate-200 rounded-xl p-3 text-center" data-slot="15:00" data-end="16:00" onclick="selectSlot(this)">
+                            <p class="font-bold text-sm text-slate-700">03:00 PM</p>
+                            <p class="slot-sub text-xs text-slate-400 mt-0.5">Sore</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 3: Visitors -->
+            <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
+                <div class="flex items-center gap-3 mb-5">
+                    <div class="w-8 h-8 bg-zoo-600 text-white rounded-full flex items-center justify-center text-sm font-bold shadow">3</div>
+                    <h2 class="font-bold text-zoo-900 text-lg">Jumlah Pengunjung</h2>
+                </div>
+
+                <div class="space-y-4">
+                    <!-- Adult Counter -->
+                    <div class="flex items-center justify-between p-4 bg-slate-50 rounded-xl border border-slate-100">
+                        <div class="flex items-center gap-3">
+                            <div class="w-9 h-9 bg-zoo-100 text-zoo-700 rounded-xl flex items-center justify-center">
+                                <i class="fa-solid fa-person text-sm"></i>
+                            </div>
+                            <div>
+                                <p class="font-semibold text-slate-800 text-sm">Dewasa</p>
+                                <p class="text-slate-400 text-xs">≥ 13 tahun • $7/orang</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <button class="counter-btn minus" onclick="changeCount('adult', -1)">−</button>
+                            <span id="count-adult" class="w-8 text-center font-bold text-zoo-900 text-lg">1</span>
+                            <button class="counter-btn plus" onclick="changeCount('adult', 1)">+</button>
+                        </div>
+                    </div>
+
+                    <!-- Child Counter -->
+                    <div class="flex items-center justify-between p-4 bg-slate-50 rounded-xl border border-slate-100">
+                        <div class="flex items-center gap-3">
+                            <div class="w-9 h-9 bg-amber-100 text-amber-700 rounded-xl flex items-center justify-center">
+                                <i class="fa-solid fa-child text-sm"></i>
+                            </div>
+                            <div>
+                                <p class="font-semibold text-slate-800 text-sm">Anak</p>
+                                <p class="text-slate-400 text-xs">3–12 tahun • $5/orang</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <button class="counter-btn minus" onclick="changeCount('child', -1)">−</button>
+                            <span id="count-child" class="w-8 text-center font-bold text-zoo-900 text-lg">0</span>
+                            <button class="counter-btn plus" onclick="changeCount('child', 1)">+</button>
+                        </div>
+                    </div>
+
+                    <!-- Student Counter -->
+                    <div class="flex items-center justify-between p-4 bg-slate-50 rounded-xl border border-slate-100">
+                        <div class="flex items-center gap-3">
+                            <div class="w-9 h-9 bg-blue-100 text-blue-700 rounded-xl flex items-center justify-center">
+                                <i class="fa-solid fa-graduation-cap text-sm"></i>
+                            </div>
+                            <div>
+                                <p class="font-semibold text-slate-800 text-sm">Pelajar</p>
+                                <p class="text-slate-400 text-xs">Tunjukkan kartu pelajar • $6/orang</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <button class="counter-btn minus" onclick="changeCount('student', -1)">−</button>
+                            <span id="count-student" class="w-8 text-center font-bold text-zoo-900 text-lg">0</span>
+                            <button class="counter-btn plus" onclick="changeCount('student', 1)">+</button>
+                        </div>
+                    </div>
+
+                    <!-- Family Package -->
+                    <div id="family-row" class="hidden items-center justify-between p-4 bg-zoo-50 rounded-xl border border-zoo-200">
+                        <div class="flex items-center gap-3">
+                            <div class="w-9 h-9 bg-zoo-200 text-zoo-700 rounded-xl flex items-center justify-center">
+                                <i class="fa-solid fa-people-roof text-sm"></i>
+                            </div>
+                            <div>
+                                <p class="font-semibold text-zoo-800 text-sm">Paket Keluarga</p>
+                                <p class="text-zoo-500 text-xs">2 Dewasa + 1 Anak • $19/paket</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <button class="counter-btn minus" onclick="changeCount('family', -1)">−</button>
+                            <span id="count-family" class="w-8 text-center font-bold text-zoo-900 text-lg">1</span>
+                            <button class="counter-btn plus" onclick="changeCount('family', 1)">+</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Total visitor info -->
+                <div class="mt-4 flex items-center gap-2 text-sm text-slate-500 bg-slate-50 rounded-xl px-4 py-3 border border-slate-100">
+                    <i class="fa-solid fa-users text-zoo-400"></i>
+                    <span>Total pengunjung: <strong id="total-visitors" class="text-zoo-800">1 orang</strong></span>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- ════════════ RIGHT: SUMMARY (2/5) ════════════ -->
+        <div class="lg:col-span-2 animate-slide-in-right">
+            <div class="sticky top-24 space-y-4">
+
+                <!-- Booking Summary Card -->
+                <div id="booking-summary-card" class="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
+                    <div class="flex items-center gap-3 mb-5">
+                        <div class="w-8 h-8 bg-emerald-100 text-zoo-700 rounded-lg flex items-center justify-center">
+                            <i class="fa-solid fa-receipt text-sm"></i>
+                        </div>
+                        <h2 class="font-bold text-zoo-900 text-lg">Ringkasan Booking</h2>
+                    </div>
+
+                    <!-- Line Items -->
+                    <div id="summary-lines" class="space-y-2 mb-4 min-h-[80px]">
+                        <div class="flex justify-between items-center text-sm py-1.5 px-2 rounded-lg transition-all">
+                            <span class="text-slate-500">Dewasa × 1</span>
+                            <span class="font-semibold text-slate-800">$7.00</span>
+                        </div>
+                    </div>
+
+                    <!-- Divider -->
+                    <div class="border-t-2 border-dashed border-slate-100 my-4"></div>
+
+                    <!-- Total -->
+                    <div class="flex justify-between items-center">
+                        <span class="text-slate-600 font-semibold">Total</span>
+                        <div class="text-right">
+                            <span id="total-price" class="text-2xl font-bold text-zoo-700">$7.00</span>
+                        </div>
+                    </div>
+
+                    <!-- Visit info -->
+                    <div class="mt-4 p-3 bg-zoo-50 rounded-xl text-xs text-zoo-700 space-y-1.5">
+                        <div class="flex items-center gap-2">
+                            <i class="fa-regular fa-calendar w-4 text-center"></i>
+                            <span id="summary-date">—</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <i class="fa-regular fa-clock w-4 text-center"></i>
+                            <span id="summary-time">09:00 AM – 10:00 AM</span>
+                        </div>
+                    </div>
+
+                    <!-- CTA Button -->
+                    <button
+                        id="generate-ticket-btn"
+                        onclick="generateTicket()"
+                        class="w-full mt-5 bg-gradient-to-r from-zoo-700 to-emerald-600 hover:from-zoo-600 hover:to-emerald-500 text-white font-bold py-3.5 rounded-xl transition-all duration-300 shadow-lg hover:shadow-zoo-500/30 hover:shadow-xl text-sm flex items-center justify-center gap-2"
+                    >
+                        <i class="fa-solid fa-ticket"></i>
+                        Buat E-Ticket Sekarang
+                    </button>
+                </div>
+
+                <!-- E-Ticket Preview -->
+                <div id="eticket-wrapper" class="hidden animate-ticket-appear">
+                    <div id="ticket-pdf-content" class="bg-white p-4 rounded-2xl border border-slate-100 shadow-xl relative">
+                        <div class="ticket-card border border-zoo-100 relative overflow-hidden">
+
+                            <!-- Top colored band is handled by ::before -->
+                            <div class="bg-gradient-to-r from-zoo-800 to-zoo-600 p-4 flex items-center justify-between">
+                                <div class="flex items-center gap-2">
+                                    <span class="text-2xl">🐾</span>
+                                    <div>
+                                        <p class="text-white font-bold text-sm">Fauna in the Zoo</p>
+                                        <p class="text-zoo-300 text-xs">Official E-Ticket</p>
+                                    </div>
+                                </div>
+                                <div class="bg-white/10 border border-white/20 rounded-lg px-2 py-1 text-zoo-200 text-[10px] font-semibold tracking-wide">
+                                    VALID
+                                </div>
+                            </div>
+
+                            <div class="p-5 flex gap-4 relative">
+                                <!-- Notch decorators (visual only) -->
+                                <div class="absolute left-0 top-1/2 -translate-x-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-zoo-50 border border-zoo-100 z-10"></div>
+                                <div class="absolute right-0 top-1/2 translate-x-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-zoo-50 border border-zoo-100 z-10"></div>
+
+                                <!-- Dashed divider -->
+                                <div class="absolute right-[110px] top-5 bottom-5 border-l-2 border-dashed border-zoo-100"></div>
+
+                                <!-- Ticket Info -->
+                                <div class="flex-1 space-y-3 pr-3">
+                                    <div>
+                                        <p class="text-zoo-600 text-[10px] font-semibold uppercase tracking-wider">Tanggal</p>
+                                        <p id="ticket-date" class="font-bold text-zoo-900 text-sm mt-0.5">—</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-zoo-600 text-[10px] font-semibold uppercase tracking-wider">Sesi</p>
+                                        <p id="ticket-time" class="font-bold text-zoo-900 text-sm mt-0.5">—</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-zoo-600 text-[10px] font-semibold uppercase tracking-wider">Pengunjung</p>
+                                        <p id="ticket-visitors" class="font-bold text-zoo-900 text-sm mt-0.5">—</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-zoo-600 text-[10px] font-semibold uppercase tracking-wider">Booking ID</p>
+                                        <p id="ticket-booking-id" class="font-bold text-zoo-800 text-xs mt-0.5 font-mono tracking-wide">—</p>
+                                    </div>
+                                </div>
+
+                                <!-- QR Code -->
+                                <div class="w-[90px] flex flex-col items-center justify-center gap-2">
+                                    <img id="ticket-qr" src="" crossorigin="anonymous" alt="QR Code" class="w-[80px] h-[80px] rounded-lg border border-zoo-100">
+                                    <p class="text-[9px] text-zoo-500 font-semibold text-center">Scan at Entrance</p>
+                                </div>
+                            </div>
+
+                            <!-- Bottom bar -->
+                            <div class="bg-zoo-50 border-t border-zoo-100 px-5 py-2.5 flex items-center justify-between">
+                                <span class="text-zoo-600 text-xs">fauna-in-the-zoo.id</span>
+                                <span id="ticket-total-display" class="text-zoo-800 font-bold text-sm">$7.00</span>
+                            </div>
+                        </div>
+
+                        <!-- Print-only instructions -->
+                        <div class="print-instructions hidden mt-6 p-4 bg-slate-50 border border-slate-200 rounded-2xl text-xs text-slate-600 space-y-2 max-w-[550px] mx-auto text-left">
+                            <p class="font-bold text-slate-800 text-sm flex items-center gap-1.5">
+                                <i class="fa-solid fa-circle-info text-zoo-600"></i>
+                                Informasi & Petunjuk Kunjungan
+                            </p>
+                            <ol class="list-decimal list-inside space-y-1 text-slate-500">
+                                <li>Simpan/cetak tiket ini dengan baik dan bawa saat berkunjung.</li>
+                                <li>Tunjukkan QR Code di atas kepada petugas pintu masuk untuk dipindai secara langsung.</li>
+                                <li>Tiket ini hanya berlaku pada tanggal dan sesi kunjungan yang telah Anda pilih.</li>
+                                <li>Dilarang memberi makan hewan secara sembarangan atau melanggar aturan keselamatan kebun binatang.</li>
+                            </ol>
+                            <div class="border-t border-dashed border-slate-200 my-2 pt-2 text-center text-[10px] text-slate-400">
+                                Terima kasih atas kunjungan Anda! Selamat bertualang di Fauna in the Zoo.
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Download & Print buttons -->
+                    <div class="flex gap-2 mt-3">
+                        <button onclick="printTicket()" class="flex-1 flex items-center justify-center gap-2 bg-white hover:bg-slate-50 border border-slate-200 text-slate-600 text-xs font-semibold py-2.5 rounded-xl transition-all">
+                            <i class="fa-solid fa-print text-slate-400"></i> Cetak
+                        </button>
+                        <button onclick="downloadTicket()" class="flex-1 flex items-center justify-center gap-2 bg-zoo-600 hover:bg-zoo-700 text-white text-xs font-semibold py-2.5 rounded-xl transition-all shadow-sm">
+                            <i class="fa-solid fa-download"></i> Unduh
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- ── FEATURES FOOTER ─────────────────────── -->
+<div class="mt-8 bg-white border-t border-slate-100">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+            <div class="text-center group">
+                <div class="w-12 h-12 bg-zoo-100 text-zoo-600 rounded-2xl flex items-center justify-center mx-auto mb-3 group-hover:bg-zoo-600 group-hover:text-white transition-all duration-300 shadow-sm">
+                    <i class="fa-solid fa-shield-halved text-lg"></i>
+                </div>
+                <p class="font-bold text-slate-800 text-sm">Pembayaran Aman</p>
+                <p class="text-slate-400 text-xs mt-1">Data kamu terlindungi</p>
+            </div>
+            <div class="text-center group">
+                <div class="w-12 h-12 bg-amber-100 text-amber-600 rounded-2xl flex items-center justify-center mx-auto mb-3 group-hover:bg-amber-500 group-hover:text-white transition-all duration-300 shadow-sm">
+                    <i class="fa-regular fa-calendar-check text-lg"></i>
+                </div>
+                <p class="font-bold text-slate-800 text-sm">Jadwal Pasti</p>
+                <p class="text-slate-400 text-xs mt-1">Tanpa perlu re-schedule</p>
+            </div>
+            <div class="text-center group">
+                <div class="w-12 h-12 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-3 group-hover:bg-blue-500 group-hover:text-white transition-all duration-300 shadow-sm">
+                    <i class="fa-solid fa-ticket text-lg"></i>
+                </div>
+                <p class="font-bold text-slate-800 text-sm">E-Ticket Instan</p>
+                <p class="text-slate-400 text-xs mt-1">Langsung dapat tiket</p>
+            </div>
+            <div class="text-center group">
+                <div class="w-12 h-12 bg-purple-100 text-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-3 group-hover:bg-purple-500 group-hover:text-white transition-all duration-300 shadow-sm">
+                    <i class="fa-solid fa-headset text-lg"></i>
+                </div>
+                <p class="font-bold text-slate-800 text-sm">Dukungan 24/7</p>
+                <p class="text-slate-400 text-xs mt-1">Tim kami siap membantu</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// ── STATE ─────────────────────────────────
+const state = {
+    ticketType: 'adult',
+    counts: { adult: 1, child: 0, student: 0, family: 0 },
+    slot: { start: '09:00', end: '10:00', label: 'Pagi' },
+    bookingId: null,
+};
+
+const PRICES = { adult: 7, child: 5, student: 6, family: 19 };
+
+const SLOT_LABELS = {
+    '09:00': 'Pagi',
+    '11:00': 'Siang Awal',
+    '13:00': 'Siang',
+    '15:00': 'Sore',
+};
+const SLOT_ENDS = { '09:00': '10:00', '11:00': '12:00', '13:00': '14:00', '15:00': '16:00' };
+
+// ── INIT ──────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+    // Set min date = today
+    const dateInput = document.getElementById('visit-date');
+    const today = new Date();
+    const dd = String(today.getDate()).padStart(2,'0');
+    const mm = String(today.getMonth()+1).padStart(2,'0');
+    const yyyy = today.getFullYear();
+    const todayStr = `${yyyy}-${mm}-${dd}`;
+    dateInput.min = todayStr;
+
+    // Default = tomorrow
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const dd2 = String(tomorrow.getDate()).padStart(2,'0');
+    const mm2 = String(tomorrow.getMonth()+1).padStart(2,'0');
+    const yyyy2 = tomorrow.getFullYear();
+    dateInput.value = `${yyyy2}-${mm2}-${dd2}`;
+
+    dateInput.addEventListener('change', updateSummary);
+
+    updateSummary();
+});
+
+// ── TICKET TYPE ───────────────────────────
+function selectTicketType(type) {
+    state.ticketType = type;
+
+    document.querySelectorAll('.ticket-type-card').forEach(card => {
+        card.classList.remove('selected');
+        // Reset to default
+        card.className = card.className.replace(/bg-zoo-700|text-white|border-zoo-700|shadow-\S+/g, '').trim();
+        card.classList.add('border-slate-200', 'bg-white', 'text-slate-700');
+        card.querySelector('.price-tag')?.classList.remove('text-zoo-300');
+        card.querySelector('.price-tag')?.classList.add('text-zoo-600');
+    });
+
+    const selected = document.querySelector(`.ticket-type-card[data-type="${type}"]`);
+    selected.classList.remove('border-slate-200', 'bg-white', 'text-slate-700');
+    selected.classList.add('selected');
+
+    // Show/hide family row
+    const familyRow = document.getElementById('family-row');
+    if (type === 'family') {
+        familyRow.classList.remove('hidden');
+        familyRow.classList.add('flex');
+        if (state.counts.family === 0) {
+            state.counts.family = 1;
+            document.getElementById('count-family').textContent = 1;
+        }
+    } else {
+        familyRow.classList.add('hidden');
+        familyRow.classList.remove('flex');
+    }
+
+    updateSummary();
+}
+
+// ── TIME SLOT ─────────────────────────────
+function selectSlot(el) {
+    document.querySelectorAll('.time-slot').forEach(s => {
+        s.classList.remove('selected');
+        s.querySelector('.slot-sub')?.classList.remove('text-zoo-300');
+        s.querySelector('.slot-sub')?.classList.add('text-slate-400');
+        s.querySelector('p:first-child')?.classList.remove('text-white');
+        s.querySelector('p:first-child')?.classList.add('text-slate-700');
+        s.classList.add('border-slate-200');
+        s.classList.remove('border-zoo-700');
+    });
+
+    el.classList.add('selected');
+    el.classList.remove('border-slate-200');
+    state.slot.start = el.dataset.slot;
+    state.slot.end   = el.dataset.end;
+
+    updateSummary();
+}
+
+// ── COUNTER ───────────────────────────────
+function changeCount(type, delta) {
+    const newVal = Math.max(0, state.counts[type] + delta);
+    // At least 1 total visitor
+    const wouldBeZero = Object.entries(state.counts).every(([k, v]) =>
+        k === type ? newVal === 0 : v === 0
+    );
+    if (wouldBeZero && delta < 0) return;
+
+    state.counts[type] = newVal;
+    document.getElementById(`count-${type}`).textContent = newVal;
+    updateSummary();
+}
+
+// ── TOTAL CALC ────────────────────────────
+function calcTotal() {
+    return (state.counts.adult   * PRICES.adult) +
+           (state.counts.child   * PRICES.child) +
+           (state.counts.student * PRICES.student) +
+           (state.counts.family  * PRICES.family);
+}
+
+function totalVisitors() {
+    return state.counts.adult +
+           state.counts.child +
+           state.counts.student +
+           (state.counts.family * 3); // family = 2A+1C = 3 people
+}
+
+// ── UPDATE SUMMARY ────────────────────────
+function updateSummary() {
+    // Build line items
+    const lines = [];
+    if (state.counts.adult > 0)
+        lines.push({ label: `Dewasa × ${state.counts.adult}`, amount: state.counts.adult * PRICES.adult });
+    if (state.counts.child > 0)
+        lines.push({ label: `Anak × ${state.counts.child}`, amount: state.counts.child * PRICES.child });
+    if (state.counts.student > 0)
+        lines.push({ label: `Pelajar × ${state.counts.student}`, amount: state.counts.student * PRICES.student });
+    if (state.counts.family > 0)
+        lines.push({ label: `Paket Keluarga × ${state.counts.family}`, amount: state.counts.family * PRICES.family });
+
+    const summaryEl = document.getElementById('summary-lines');
+    summaryEl.innerHTML = lines.map(l => `
+        <div class="flex justify-between items-center text-sm py-1.5 px-2 rounded-lg transition-all">
+            <span class="text-slate-500">${l.label}</span>
+            <span class="font-semibold text-slate-800">$${l.amount.toFixed(2)}</span>
+        </div>
+    `).join('') || `<p class="text-slate-400 text-sm text-center py-4">Pilih setidaknya 1 pengunjung</p>`;
+
+    const total = calcTotal();
+    document.getElementById('total-price').textContent = `$${total.toFixed(2)}`;
+
+    // Visitors
+    const tv = totalVisitors();
+    document.getElementById('total-visitors').textContent = `${tv} orang`;
+
+    // Date
+    const dateEl = document.getElementById('visit-date');
+    const dateStr = dateEl.value
+        ? new Date(dateEl.value + 'T00:00:00').toLocaleDateString('id-ID', { weekday:'long', day:'numeric', month:'long', year:'numeric' })
+        : '—';
+    document.getElementById('summary-date').textContent = dateStr;
+
+    // Time
+    const fmt = t => {
+        const [h, m] = t.split(':');
+        const hh = parseInt(h);
+        const suffix = hh >= 12 ? 'PM' : 'AM';
+        const h12 = hh > 12 ? hh - 12 : (hh === 0 ? 12 : hh);
+        return `${String(h12).padStart(2,'0')}:${m} ${suffix}`;
+    };
+    document.getElementById('summary-time').textContent = `${fmt(state.slot.start)} – ${fmt(state.slot.end)}`;
+}
+
+// ── GENERATE TICKET ───────────────────────
+function generateTicket() {
+    const total = calcTotal();
+    const tv    = totalVisitors();
+
+    if (tv === 0) {
+        alert('Pilih setidaknya 1 pengunjung!');
+        return;
+    }
+
+    const dateEl  = document.getElementById('visit-date');
+    if (!dateEl.value) {
+        alert('Pilih tanggal kunjungan!');
+        return;
+    }
+
+    // Generate unique booking ID
+    state.bookingId = 'AZ' + Math.floor(Math.random() * 9000000000 + 1000000000);
+
+    const dateFormatted = new Date(dateEl.value + 'T00:00:00').toLocaleDateString('id-ID', {
+        day: 'numeric', month: 'long', year: 'numeric'
+    });
+
+    const fmt = t => {
+        const [h, m] = t.split(':');
+        const hh = parseInt(h);
+        const suffix = hh >= 12 ? 'PM' : 'AM';
+        const h12 = hh > 12 ? hh - 12 : (hh === 0 ? 12 : hh);
+        return `${String(h12).padStart(2,'0')}:${m} ${suffix}`;
+    };
+
+    // Build visitor summary text
+    const parts = [];
+    if (state.counts.adult > 0)   parts.push(`${state.counts.adult} Dewasa`);
+    if (state.counts.child > 0)   parts.push(`${state.counts.child} Anak`);
+    if (state.counts.student > 0) parts.push(`${state.counts.student} Pelajar`);
+    if (state.counts.family > 0)  parts.push(`${state.counts.family} Paket Keluarga`);
+    const visitorText = `${tv} orang (${parts.join(', ')})`;
+
+    // Fill ticket
+    document.getElementById('ticket-date').textContent     = dateFormatted;
+    document.getElementById('ticket-time').textContent     = `${fmt(state.slot.start)} – ${fmt(state.slot.end)}`;
+    document.getElementById('ticket-visitors').textContent = visitorText;
+    document.getElementById('ticket-booking-id').textContent = state.bookingId;
+    document.getElementById('ticket-total-display').textContent = `$${total.toFixed(2)}`;
+
+    // QR Code
+    const qrData = `FaunaZoo|${state.bookingId}|${dateEl.value}|${state.slot.start}|${tv}`;
+    document.getElementById('ticket-qr').src =
+        `https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(qrData)}&color=166534&bgcolor=f0fdf4&margin=4`;
+
+    // Show ticket
+    const wrapper = document.getElementById('eticket-wrapper');
+    wrapper.classList.remove('hidden');
+
+    // Update button
+    const btn = document.getElementById('generate-ticket-btn');
+    btn.innerHTML = `<i class="fa-solid fa-rotate-right"></i> Buat Ulang Tiket`;
+    btn.classList.add('from-emerald-600', 'to-zoo-500');
+
+    // Scroll to ticket
+    wrapper.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+// ── PRINT / DOWNLOAD ─────────────────────
+function printTicket() {
+    window.print();
+}
+
+function downloadTicket() {
+    if (!state.bookingId) return;
+
+    const element = document.getElementById('ticket-pdf-content');
+
+    // Temporarily show instructions on the live element
+    const instructions = element.querySelector('.print-instructions');
+    if (instructions) {
+        instructions.classList.remove('hidden');
+        instructions.classList.add('block');
+    }
+
+    // Force animation and transition disable on the live element temporarily
+    element.classList.add('no-print-animations');
+
+    html2canvas(element, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: '#ffffff',
+        logging: false
+    }).then(canvas => {
+        // Hide instructions again immediately
+        if (instructions) {
+            instructions.classList.add('hidden');
+            instructions.classList.remove('block');
+        }
+        element.classList.remove('no-print-animations');
+
+        const imgData = canvas.toDataURL('image/jpeg', 0.98);
+        
+        // Use jsPDF directly from window.jspdf
+        const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF('p', 'mm', 'a4');
+        
+        // A4 page width = 210mm. Margins are 15mm left and right.
+        // So image width is 210 - 2*15 = 180mm.
+        const imgWidth = 180;
+        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+        
+        // Center the image horizontally (15mm margin) and position it at 15mm from top
+        pdf.addImage(imgData, 'JPEG', 15, 15, imgWidth, imgHeight);
+        pdf.save(`ticket-${state.bookingId}.pdf`);
+    }).catch(err => {
+        console.error(err);
+        // Clean up in case of error
+        if (instructions) {
+            instructions.classList.add('hidden');
+            instructions.classList.remove('block');
+        }
+        element.classList.remove('no-print-animations');
+    });
+}
+</script>
+</body>
+</html>
