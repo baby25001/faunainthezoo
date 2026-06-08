@@ -139,7 +139,7 @@ function fmt12($t) {
 
 <div class="max-w-[1020px] mx-auto px-6 relative z-10">
 
-    <div class="flex justify-between items-center mb-5 flex-wrap gap-3">
+    <div class="flex justify-between items-center m-5 flex-wrap gap-3">
         <div class="text-sm">
             <?php if ($done === $total && $total > 0): ?>
             <span class="bg-[#e8f5e9] text-[#2e7d32] border border-[#a5d6a7]/65 text-xs font-bold px-4 py-2 rounded-full shadow-sm">🎉 All tasks done for today!</span>
