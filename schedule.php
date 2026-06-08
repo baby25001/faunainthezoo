@@ -64,26 +64,7 @@ function fmt12($t) {
     return sprintf('%02d:%s %s', $h12, $m, $s);
 }
 
-// Helper function untuk memberikan variasi task agar sama persis dengan mockup
-function getTaskName($animalName) {
-    $name = strtolower($animalName);
-    if (strpos($name, 'elephant') !== false || strpos($name, 'dumbo') !== false) {
-        return 'Health Check';
-    }
-    if (strpos($name, 'panda') !== false || strpos($name, 'bamboo') !== false) {
-        return 'Habitat Cleaning';
-    }
-    if (strpos($name, 'tiger') !== false || strpos($name, 'rajah') !== false) {
-        return 'Exercise';
-    }
-    if (strpos($name, 'lion') !== false || strpos($name, 'simba') !== false) {
-        return 'Feeding';
-    }
-    // Fallback variatif
-    $tasks = ['Feeding', 'Health Check', 'Habitat Cleaning', 'Exercise'];
-    $hash = crc32($name);
-    return $tasks[abs($hash) % count($tasks)];
-}
+// Catatan: Fungsi getTaskName lama telah dihapus karena sekarang semua task adalah 'Feeding'
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -111,15 +92,12 @@ function getTaskName($animalName) {
 </head>
 <body class="bg-[#e8f5e9] min-h-screen pb-16">
 
-<!-- ── NAVBAR ─────────────────────────── -->
 <nav class="bg-[#1b5e20] sticky top-0 z-50 shadow-md">
     <div class="max-w-7xl mx-auto px-5 flex items-center justify-between h-16">
-        <!-- Brand -->
         <a href="animals.php" class="flex items-center gap-2 text-white font-extrabold text-lg tracking-wide hover:opacity-95 transition-opacity">
             <span class="text-2xl">🐯</span>Fauna in the Zoo
         </a>
 
-        <!-- Links -->
         <div class="hidden md:flex items-center gap-2 text-sm font-semibold text-white/90">
             <a href="animals.php" class="<?= basename($_SERVER['PHP_SELF']) === 'animals.php' ? 'bg-[#2e7d32] text-white' : 'hover:text-white transition-colors' ?> px-4 py-1.5 rounded-full">Dashboard</a>
             <a href="habitats.php" class="<?= basename($_SERVER['PHP_SELF']) === 'habitats.php' ? 'bg-[#2e7d32] text-white' : 'hover:text-white transition-colors' ?> px-4 py-1.5 rounded-full">Habitats</a>
@@ -129,7 +107,6 @@ function getTaskName($animalName) {
             <?php endif; ?>
         </div>
 
-        <!-- Right Buttons -->
         <div class="flex items-center gap-3 text-sm font-semibold">
             <span class="text-[#c8e6c9] hidden sm:flex items-center gap-1.5 mr-2">
                 <i class="fa-regular fa-user"></i> <?= htmlspecialchars($_SESSION['username']) ?>
@@ -146,10 +123,8 @@ function getTaskName($animalName) {
     </div>
 </nav>
 
-<!-- ── HEADER ─────────────────────────── -->
 <div class="dashboard-bg text-white pt-10 pb-12 text-center px-4">
     <div class="flex flex-col items-center justify-center">
-        <!-- Calendar icon card mimicking the mockup (white square) -->
         <div class="bg-white rounded-2xl shadow-lg flex flex-col overflow-hidden w-16 h-16 border border-white/20 mb-4 select-none">
             <div class="bg-[#ef4444] text-white text-[10px] font-bold uppercase tracking-wider py-1 text-center leading-none">Jul</div>
             <div class="flex-grow flex items-center justify-center text-2xl font-black text-gray-800 leading-none">17</div>
@@ -162,10 +137,8 @@ function getTaskName($animalName) {
     </div>
 </div>
 
-<!-- ── CONTENT ────────────────────────── -->
 <div class="max-w-[1020px] mx-auto px-6 relative z-10">
 
-    <!-- Top bar -->
     <div class="flex justify-between items-center mb-5 flex-wrap gap-3">
         <div class="text-sm">
             <?php if ($done === $total && $total > 0): ?>
@@ -182,7 +155,6 @@ function getTaskName($animalName) {
         </form>
     </div>
 
-    <!-- Table Card -->
     <div class="bg-white rounded-[2.2rem] shadow-[0_10px_35px_rgba(0,0,0,0.12)] overflow-hidden mb-8 border border-white/20">
         <div class="overflow-x-auto">
             <table class="w-full">
@@ -198,40 +170,14 @@ function getTaskName($animalName) {
                 </thead>
                 <tbody class="divide-y divide-gray-100 font-semibold text-gray-700">
                     <?php
-                    $mockKeepers = [
-                        'simba'    => 'John Doe',
-                        'dumbo'    => 'Jane Smith',
-                        'geoffrey' => 'Mike Johnson',
-                        'bamboo'   => 'Sarah Lee',
-                        'rajah'    => 'Tom Wilson',
-                        'skipper'  => 'Emily Brown'
-                    ];
                     foreach ($jadwal as $idx => $j):
                         $is_done = $j['status'] === 'done';
                         
-                        // Try matching keeper by animal name
-                        $aNameLower = strtolower($j['animal_name']);
-                        $keeper = '';
-                        foreach ($mockKeepers as $kKey => $kVal) {
-                            if (strpos($aNameLower, $kKey) !== false) {
-                                $keeper = $kVal;
-                                break;
-                            }
-                        }
-                        if (empty($keeper)) {
-                            if (strpos($aNameLower, 'elephant') !== false) $keeper = 'Jane Smith';
-                            elseif (strpos($aNameLower, 'lion') !== false) $keeper = 'John Doe';
-                            elseif (strpos($aNameLower, 'penguin') !== false) $keeper = 'Emily Brown';
-                            elseif (strpos($aNameLower, 'panda') !== false) $keeper = 'Sarah Lee';
-                            elseif (strpos($aNameLower, 'tiger') !== false) $keeper = 'Tom Wilson';
-                            elseif (strpos($aNameLower, 'giraffe') !== false) $keeper = 'Mike Johnson';
-                            else $keeper = $keepers[$idx % count($keepers)] ?? 'John Doe';
-                        }
-                        
-                        $task    = getTaskName($j['animal_name']);
+                        // Set nilai statis sesuai permintaan Anda
+                        $keeper = 'Keeper 1';
+                        $task   = 'Feeding';
                     ?>
                     <tr class="<?= $is_done ? 'is-done text-gray-400' : '' ?> card-anim" style="animation-delay:<?= $idx * 0.03 ?>s">
-                        <!-- Animal -->
                         <td class="px-6 py-4">
                             <div class="flex items-center gap-3">
                                 <div class="w-10 h-10 rounded-full overflow-hidden bg-[#f0fdf4] border border-[#c8e6c9] flex-shrink-0 shadow-sm">
@@ -245,13 +191,9 @@ function getTaskName($animalName) {
                                 <span class="font-bold text-[#1b5e20] text-sm"><?= htmlspecialchars($j['animal_name']) ?></span>
                             </div>
                         </td>
-                        <!-- Task -->
                         <td class="px-5 py-4 text-sm <?= $is_done ? 'text-gray-400 font-medium' : 'text-gray-600 font-semibold' ?>"><?= htmlspecialchars($task) ?></td>
-                        <!-- Time -->
                         <td class="px-5 py-4 text-sm font-bold <?= $is_done ? 'text-gray-400' : 'text-gray-800' ?>"><?= fmt12($j['feeding_schedule']) ?></td>
-                        <!-- Keeper -->
                         <td class="px-5 py-4 text-sm <?= $is_done ? 'text-gray-400 font-medium' : 'text-gray-500 font-semibold' ?>"><?= htmlspecialchars($keeper) ?></td>
-                        <!-- Status -->
                         <td class="px-5 py-4">
                             <?php if ($is_done): ?>
                             <span class="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1 rounded-full bg-[#dcfce7] text-[#15803d] border border-[#bbf7d0]">✓ Done</span>
@@ -259,7 +201,6 @@ function getTaskName($animalName) {
                             <span class="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1 rounded-full bg-[#fff8e1] text-[#e65100] border border-[#ffe082]">⏳ Pending</span>
                             <?php endif; ?>
                         </td>
-                        <!-- Action -->
                         <td class="px-6 py-4 text-center">
                             <?php if (!$is_done): ?>
                             <form method="POST" class="inline">
@@ -286,7 +227,6 @@ function getTaskName($animalName) {
         </div>
     </div>
 
-    <!-- Footer collage of animals -->
     <div class="w-full max-w-[900px] mx-auto mt-12 mb-4 px-6 drop-shadow-[0_10px_25px_rgba(0,0,0,0.15)] select-none pointer-events-none">
         <img src="assets/images/schedule_animals_footer.png" alt="Zoo Animals Collage Footer" class="w-full h-auto object-contain">
     </div>

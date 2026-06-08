@@ -20,7 +20,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $result = mysqli_stmt_get_result($stmt);
         $user   = mysqli_fetch_assoc($result);
 
-        // GANTI SEMENTARA KODE VERIFIKASI MENJADI INI:
         if (!$user || (password_verify($password, $user['password']) === false && md5($password) !== $user['password'])) {
             $error = "Username atau password salah. Coba lagi.";
         } else {
