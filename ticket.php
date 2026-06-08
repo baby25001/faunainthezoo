@@ -102,20 +102,32 @@ requireLogin();
 
         /* Print styling for layout ticket */
         @media print {
+            @page { margin: 15mm; }
             body {
                 background: white !important;
                 color: #000 !important;
-                font-size: 12px;
+                /* Pastikan warna background tiket ikut terprint (terutama di Chrome/Safari) */
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
             }
-            /* Hide non-ticket elements */
+            
+            /* Sembunyikan elemen secara spesifik tanpa menghilangkan container utama */
             nav,
-            .bg-gradient-to-br,
-            .max-w-7xl,
-            .mt-10,
+            .hero-section,
+            .form-section,
             #booking-summary-card,
-            .print-instructions + div {
+            #action-buttons,
+            .features-footer {
                 display: none !important;
             }
+
+            /* Ubah layout wrapper tiket agar pas di kertas */
+            #eticket-wrapper {
+                display: block !important;
+                width: 100% !important;
+                margin: 0 !important;
+            }
+
             #ticket-pdf-content {
                 display: block !important;
                 margin: 0 auto !important;
@@ -130,10 +142,7 @@ requireLogin();
             }
             .print-instructions {
                 display: block !important;
-            }
-            .ticket-notch-top, .ticket-notch-bottom {
-                background-color: #ffffff !important;
-                border-color: #166534 !important;
+                margin-top: 20px !important;
             }
         }
 
@@ -149,23 +158,16 @@ requireLogin();
             opacity: 1 !important;
             transform: none !important;
         }
-        .no-print-animations .ticket-notch-top,
-        .no-print-animations .ticket-notch-bottom {
-            background-color: #ffffff !important;
-        }
     </style>
 </head>
 <body class="bg-zoo-50 min-h-screen">
 
-<!-- ── NAVBAR ─────────────────────────── -->
-<nav class="bg-[#1b5e20] sticky top-0 z-50 shadow-md">
+<nav class="bg-[#1b5e20] sticky top-0 z-50 shadow-md print:hidden">
     <div class="max-w-7xl mx-auto px-5 flex items-center justify-between h-16">
-        <!-- Brand -->
         <a href="animals.php" class="flex items-center gap-2 text-white font-extrabold text-lg tracking-wide hover:opacity-95 transition-opacity">
             <span class="text-2xl">🐯</span>Fauna in the Zoo
         </a>
 
-        <!-- Links -->
         <div class="hidden md:flex items-center gap-2 text-sm font-semibold text-white/90">
             <a href="animals.php" class="<?= basename($_SERVER['PHP_SELF']) === 'animals.php' ? 'bg-[#2e7d32] text-white' : 'hover:text-white transition-colors' ?> px-4 py-1.5 rounded-full">Dashboard</a>
             <a href="habitats.php" class="<?= basename($_SERVER['PHP_SELF']) === 'habitats.php' ? 'bg-[#2e7d32] text-white' : 'hover:text-white transition-colors' ?> px-4 py-1.5 rounded-full">Habitats</a>
@@ -175,7 +177,6 @@ requireLogin();
             <?php endif; ?>
         </div>
 
-        <!-- Right Buttons -->
         <div class="flex items-center gap-3 text-sm font-semibold">
             <span class="text-[#c8e6c9] hidden sm:flex items-center gap-1.5 mr-2">
                 <i class="fa-regular fa-user"></i> <?= htmlspecialchars($_SESSION['username']) ?>
@@ -192,11 +193,9 @@ requireLogin();
     </div>
 </nav>
 
-<!-- ── HERO HEADER ─────────────────────────── -->
-<div class="bg-gradient-to-br from-zoo-900 via-zoo-800 to-emerald-700 text-white relative overflow-hidden">
+<div class="hero-section bg-gradient-to-br from-zoo-900 via-zoo-800 to-emerald-700 text-white relative overflow-hidden print:hidden">
     <div class="dot-bg absolute inset-0"></div>
 
-    <!-- Decorative blobs -->
     <div class="absolute -top-20 -right-20 w-64 h-64 bg-zoo-600/30 rounded-full blur-3xl pointer-events-none"></div>
     <div class="absolute -bottom-10 -left-10 w-48 h-48 bg-emerald-500/20 rounded-full blur-3xl pointer-events-none"></div>
 
@@ -234,14 +233,11 @@ requireLogin();
     </div>
 </div>
 
-<!-- ── MAIN BOOKING FORM ─────────────────────── -->
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-    <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 print:p-0">
+    <div class="grid grid-cols-1 lg:grid-cols-5 gap-6 print:block">
 
-        <!-- ════════════ LEFT: FORM (3/5) ════════════ -->
-        <div class="lg:col-span-3 space-y-5 animate-slide-up">
+        <div class="form-section lg:col-span-3 space-y-5 animate-slide-up print:hidden">
 
-            <!-- Step 1: Ticket Type -->
             <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
                 <div class="flex items-center gap-3 mb-5">
                     <div class="w-8 h-8 bg-zoo-600 text-white rounded-full flex items-center justify-center text-sm font-bold shadow">1</div>
@@ -249,7 +245,6 @@ requireLogin();
                 </div>
 
                 <div class="grid grid-cols-2 sm:grid-cols-4 gap-3" id="ticket-type-grid">
-                    <!-- Adult -->
                     <div class="ticket-type-card selected border-2 border-zoo-700 bg-zoo-700 text-white rounded-xl p-4 text-center" data-type="adult" onclick="selectTicketType('adult')">
                         <div class="type-icon w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center mx-auto mb-2">
                             <i class="fa-solid fa-person text-lg"></i>
@@ -257,7 +252,6 @@ requireLogin();
                         <p class="font-bold text-sm">Dewasa</p>
                         <p class="price-tag font-bold text-zoo-300 text-lg mt-0.5">$7<span class="text-xs font-normal">/orang</span></p>
                     </div>
-                    <!-- Child -->
                     <div class="ticket-type-card border-2 border-slate-200 bg-white text-slate-700 rounded-xl p-4 text-center" data-type="child" onclick="selectTicketType('child')">
                         <div class="type-icon w-10 h-10 bg-zoo-50 text-zoo-600 rounded-xl flex items-center justify-center mx-auto mb-2">
                             <i class="fa-solid fa-child text-lg"></i>
@@ -266,7 +260,6 @@ requireLogin();
                         <p class="text-xs text-slate-400 -mt-0.5">3–12 tahun</p>
                         <p class="price-tag font-bold text-zoo-600 text-lg mt-0.5">$5<span class="text-xs font-normal">/orang</span></p>
                     </div>
-                    <!-- Student -->
                     <div class="ticket-type-card border-2 border-slate-200 bg-white text-slate-700 rounded-xl p-4 text-center" data-type="student" onclick="selectTicketType('student')">
                         <div class="type-icon w-10 h-10 bg-zoo-50 text-zoo-600 rounded-xl flex items-center justify-center mx-auto mb-2">
                             <i class="fa-solid fa-graduation-cap text-lg"></i>
@@ -274,7 +267,6 @@ requireLogin();
                         <p class="font-bold text-sm">Pelajar</p>
                         <p class="price-tag font-bold text-zoo-600 text-lg mt-0.5">$6<span class="text-xs font-normal">/orang</span></p>
                     </div>
-                    <!-- Family -->
                     <div class="ticket-type-card border-2 border-slate-200 bg-white text-slate-700 rounded-xl p-4 text-center relative overflow-hidden" data-type="family" onclick="selectTicketType('family')">
                         <div class="absolute top-1.5 right-1.5 bg-amber-400 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full">HEMAT</div>
                         <div class="type-icon w-10 h-10 bg-zoo-50 text-zoo-600 rounded-xl flex items-center justify-center mx-auto mb-2">
@@ -287,14 +279,12 @@ requireLogin();
                 </div>
             </div>
 
-            <!-- Step 2: Date & Time -->
             <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
                 <div class="flex items-center gap-3 mb-5">
                     <div class="w-8 h-8 bg-zoo-600 text-white rounded-full flex items-center justify-center text-sm font-bold shadow">2</div>
                     <h2 class="font-bold text-zoo-900 text-lg">Tanggal &amp; Sesi Kunjungan</h2>
                 </div>
 
-                <!-- Date Picker -->
                 <div class="mb-5">
                     <label class="block text-sm font-semibold text-zoo-700 mb-2">
                         <i class="fa-regular fa-calendar mr-1.5"></i>Tanggal Kunjungan
@@ -306,7 +296,6 @@ requireLogin();
                     >
                 </div>
 
-                <!-- Time Slots -->
                 <div>
                     <label class="block text-sm font-semibold text-zoo-700 mb-3">
                         <i class="fa-regular fa-clock mr-1.5"></i>Sesi Kunjungan
@@ -332,7 +321,6 @@ requireLogin();
                 </div>
             </div>
 
-            <!-- Step 3: Visitors -->
             <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
                 <div class="flex items-center gap-3 mb-5">
                     <div class="w-8 h-8 bg-zoo-600 text-white rounded-full flex items-center justify-center text-sm font-bold shadow">3</div>
@@ -340,7 +328,6 @@ requireLogin();
                 </div>
 
                 <div class="space-y-4">
-                    <!-- Adult Counter -->
                     <div class="flex items-center justify-between p-4 bg-slate-50 rounded-xl border border-slate-100">
                         <div class="flex items-center gap-3">
                             <div class="w-9 h-9 bg-zoo-100 text-zoo-700 rounded-xl flex items-center justify-center">
@@ -358,7 +345,6 @@ requireLogin();
                         </div>
                     </div>
 
-                    <!-- Child Counter -->
                     <div class="flex items-center justify-between p-4 bg-slate-50 rounded-xl border border-slate-100">
                         <div class="flex items-center gap-3">
                             <div class="w-9 h-9 bg-amber-100 text-amber-700 rounded-xl flex items-center justify-center">
@@ -376,7 +362,6 @@ requireLogin();
                         </div>
                     </div>
 
-                    <!-- Student Counter -->
                     <div class="flex items-center justify-between p-4 bg-slate-50 rounded-xl border border-slate-100">
                         <div class="flex items-center gap-3">
                             <div class="w-9 h-9 bg-blue-100 text-blue-700 rounded-xl flex items-center justify-center">
@@ -394,7 +379,6 @@ requireLogin();
                         </div>
                     </div>
 
-                    <!-- Family Package -->
                     <div id="family-row" class="hidden items-center justify-between p-4 bg-zoo-50 rounded-xl border border-zoo-200">
                         <div class="flex items-center gap-3">
                             <div class="w-9 h-9 bg-zoo-200 text-zoo-700 rounded-xl flex items-center justify-center">
@@ -413,7 +397,6 @@ requireLogin();
                     </div>
                 </div>
 
-                <!-- Total visitor info -->
                 <div class="mt-4 flex items-center gap-2 text-sm text-slate-500 bg-slate-50 rounded-xl px-4 py-3 border border-slate-100">
                     <i class="fa-solid fa-users text-zoo-400"></i>
                     <span>Total pengunjung: <strong id="total-visitors" class="text-zoo-800">1 orang</strong></span>
@@ -422,12 +405,10 @@ requireLogin();
 
         </div>
 
-        <!-- ════════════ RIGHT: SUMMARY (2/5) ════════════ -->
-        <div class="lg:col-span-2 animate-slide-in-right">
+        <div class="lg:col-span-2 animate-slide-in-right print:col-span-5 print:w-full">
             <div class="sticky top-24 space-y-4">
 
-                <!-- Booking Summary Card -->
-                <div id="booking-summary-card" class="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
+                <div id="booking-summary-card" class="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 print:hidden">
                     <div class="flex items-center gap-3 mb-5">
                         <div class="w-8 h-8 bg-emerald-100 text-zoo-700 rounded-lg flex items-center justify-center">
                             <i class="fa-solid fa-receipt text-sm"></i>
@@ -435,7 +416,6 @@ requireLogin();
                         <h2 class="font-bold text-zoo-900 text-lg">Ringkasan Booking</h2>
                     </div>
 
-                    <!-- Line Items -->
                     <div id="summary-lines" class="space-y-2 mb-4 min-h-[80px]">
                         <div class="flex justify-between items-center text-sm py-1.5 px-2 rounded-lg transition-all">
                             <span class="text-slate-500">Dewasa × 1</span>
@@ -443,10 +423,8 @@ requireLogin();
                         </div>
                     </div>
 
-                    <!-- Divider -->
                     <div class="border-t-2 border-dashed border-slate-100 my-4"></div>
 
-                    <!-- Total -->
                     <div class="flex justify-between items-center">
                         <span class="text-slate-600 font-semibold">Total</span>
                         <div class="text-right">
@@ -454,7 +432,6 @@ requireLogin();
                         </div>
                     </div>
 
-                    <!-- Visit info -->
                     <div class="mt-4 p-3 bg-zoo-50 rounded-xl text-xs text-zoo-700 space-y-1.5">
                         <div class="flex items-center gap-2">
                             <i class="fa-regular fa-calendar w-4 text-center"></i>
@@ -466,7 +443,6 @@ requireLogin();
                         </div>
                     </div>
 
-                    <!-- CTA Button -->
                     <button
                         id="generate-ticket-btn"
                         onclick="generateTicket()"
@@ -477,12 +453,10 @@ requireLogin();
                     </button>
                 </div>
 
-                <!-- E-Ticket Preview -->
-                <div id="eticket-wrapper" class="hidden animate-ticket-appear">
+                <div id="eticket-wrapper" class="hidden animate-ticket-appear print:block">
                     <div id="ticket-pdf-content" class="bg-white p-4 rounded-2xl border border-slate-100 shadow-xl relative">
                         <div class="ticket-card border border-zoo-100 relative overflow-hidden">
 
-                            <!-- Top colored band is handled by ::before -->
                             <div class="bg-gradient-to-r from-zoo-800 to-zoo-600 p-4 flex items-center justify-between">
                                 <div class="flex items-center gap-2">
                                     <span class="text-2xl">🐾</span>
@@ -497,14 +471,11 @@ requireLogin();
                             </div>
 
                             <div class="p-5 flex gap-4 relative">
-                                <!-- Notch decorators (visual only) -->
                                 <div class="absolute left-0 top-1/2 -translate-x-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-zoo-50 border border-zoo-100 z-10"></div>
                                 <div class="absolute right-0 top-1/2 translate-x-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-zoo-50 border border-zoo-100 z-10"></div>
 
-                                <!-- Dashed divider -->
                                 <div class="absolute right-[110px] top-5 bottom-5 border-l-2 border-dashed border-zoo-100"></div>
 
-                                <!-- Ticket Info -->
                                 <div class="flex-1 space-y-3 pr-3">
                                     <div>
                                         <p class="text-zoo-600 text-[10px] font-semibold uppercase tracking-wider">Tanggal</p>
@@ -524,21 +495,18 @@ requireLogin();
                                     </div>
                                 </div>
 
-                                <!-- QR Code -->
                                 <div class="w-[90px] flex flex-col items-center justify-center gap-2">
                                     <img id="ticket-qr" src="" crossorigin="anonymous" alt="QR Code" class="w-[80px] h-[80px] rounded-lg border border-zoo-100">
                                     <p class="text-[9px] text-zoo-500 font-semibold text-center">Scan at Entrance</p>
                                 </div>
                             </div>
 
-                            <!-- Bottom bar -->
                             <div class="bg-zoo-50 border-t border-zoo-100 px-5 py-2.5 flex items-center justify-between">
                                 <span class="text-zoo-600 text-xs">fauna-in-the-zoo.id</span>
                                 <span id="ticket-total-display" class="text-zoo-800 font-bold text-sm">$7.00</span>
                             </div>
                         </div>
 
-                        <!-- Print-only instructions -->
                         <div class="print-instructions hidden mt-6 p-4 bg-slate-50 border border-slate-200 rounded-2xl text-xs text-slate-600 space-y-2 max-w-[550px] mx-auto text-left">
                             <p class="font-bold text-slate-800 text-sm flex items-center gap-1.5">
                                 <i class="fa-solid fa-circle-info text-zoo-600"></i>
@@ -556,8 +524,7 @@ requireLogin();
                         </div>
                     </div>
 
-                    <!-- Download & Print buttons -->
-                    <div class="flex gap-2 mt-3">
+                    <div id="action-buttons" class="flex gap-2 mt-3 print:hidden">
                         <button onclick="printTicket()" class="flex-1 flex items-center justify-center gap-2 bg-white hover:bg-slate-50 border border-slate-200 text-slate-600 text-xs font-semibold py-2.5 rounded-xl transition-all">
                             <i class="fa-solid fa-print text-slate-400"></i> Cetak
                         </button>
@@ -573,8 +540,7 @@ requireLogin();
     </div>
 </div>
 
-<!-- ── FEATURES FOOTER ─────────────────────── -->
-<div class="mt-8 bg-white border-t border-slate-100">
+<div class="features-footer mt-8 bg-white border-t border-slate-100 print:hidden">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
             <div class="text-center group">
@@ -630,7 +596,6 @@ const SLOT_ENDS = { '09:00': '10:00', '11:00': '12:00', '13:00': '14:00', '15:00
 
 // ── INIT ──────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
-    // Set min date = today
     const dateInput = document.getElementById('visit-date');
     const today = new Date();
     const dd = String(today.getDate()).padStart(2,'0');
@@ -639,7 +604,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const todayStr = `${yyyy}-${mm}-${dd}`;
     dateInput.min = todayStr;
 
-    // Default = tomorrow
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
     const dd2 = String(tomorrow.getDate()).padStart(2,'0');
@@ -648,7 +612,6 @@ document.addEventListener('DOMContentLoaded', () => {
     dateInput.value = `${yyyy2}-${mm2}-${dd2}`;
 
     dateInput.addEventListener('change', updateSummary);
-
     updateSummary();
 });
 
@@ -658,7 +621,6 @@ function selectTicketType(type) {
 
     document.querySelectorAll('.ticket-type-card').forEach(card => {
         card.classList.remove('selected');
-        // Reset to default
         card.className = card.className.replace(/bg-zoo-700|text-white|border-zoo-700|shadow-\S+/g, '').trim();
         card.classList.add('border-slate-200', 'bg-white', 'text-slate-700');
         card.querySelector('.price-tag')?.classList.remove('text-zoo-300');
@@ -669,7 +631,6 @@ function selectTicketType(type) {
     selected.classList.remove('border-slate-200', 'bg-white', 'text-slate-700');
     selected.classList.add('selected');
 
-    // Show/hide family row
     const familyRow = document.getElementById('family-row');
     if (type === 'family') {
         familyRow.classList.remove('hidden');
@@ -682,7 +643,6 @@ function selectTicketType(type) {
         familyRow.classList.add('hidden');
         familyRow.classList.remove('flex');
     }
-
     updateSummary();
 }
 
@@ -702,14 +662,12 @@ function selectSlot(el) {
     el.classList.remove('border-slate-200');
     state.slot.start = el.dataset.slot;
     state.slot.end   = el.dataset.end;
-
     updateSummary();
 }
 
 // ── COUNTER ───────────────────────────────
 function changeCount(type, delta) {
     const newVal = Math.max(0, state.counts[type] + delta);
-    // At least 1 total visitor
     const wouldBeZero = Object.entries(state.counts).every(([k, v]) =>
         k === type ? newVal === 0 : v === 0
     );
@@ -729,24 +687,16 @@ function calcTotal() {
 }
 
 function totalVisitors() {
-    return state.counts.adult +
-           state.counts.child +
-           state.counts.student +
-           (state.counts.family * 3); // family = 2A+1C = 3 people
+    return state.counts.adult + state.counts.child + state.counts.student + (state.counts.family * 3);
 }
 
 // ── UPDATE SUMMARY ────────────────────────
 function updateSummary() {
-    // Build line items
     const lines = [];
-    if (state.counts.adult > 0)
-        lines.push({ label: `Dewasa × ${state.counts.adult}`, amount: state.counts.adult * PRICES.adult });
-    if (state.counts.child > 0)
-        lines.push({ label: `Anak × ${state.counts.child}`, amount: state.counts.child * PRICES.child });
-    if (state.counts.student > 0)
-        lines.push({ label: `Pelajar × ${state.counts.student}`, amount: state.counts.student * PRICES.student });
-    if (state.counts.family > 0)
-        lines.push({ label: `Paket Keluarga × ${state.counts.family}`, amount: state.counts.family * PRICES.family });
+    if (state.counts.adult > 0) lines.push({ label: `Dewasa × ${state.counts.adult}`, amount: state.counts.adult * PRICES.adult });
+    if (state.counts.child > 0) lines.push({ label: `Anak × ${state.counts.child}`, amount: state.counts.child * PRICES.child });
+    if (state.counts.student > 0) lines.push({ label: `Pelajar × ${state.counts.student}`, amount: state.counts.student * PRICES.student });
+    if (state.counts.family > 0) lines.push({ label: `Paket Keluarga × ${state.counts.family}`, amount: state.counts.family * PRICES.family });
 
     const summaryEl = document.getElementById('summary-lines');
     summaryEl.innerHTML = lines.map(l => `
@@ -759,18 +709,15 @@ function updateSummary() {
     const total = calcTotal();
     document.getElementById('total-price').textContent = `$${total.toFixed(2)}`;
 
-    // Visitors
     const tv = totalVisitors();
     document.getElementById('total-visitors').textContent = `${tv} orang`;
 
-    // Date
     const dateEl = document.getElementById('visit-date');
     const dateStr = dateEl.value
         ? new Date(dateEl.value + 'T00:00:00').toLocaleDateString('id-ID', { weekday:'long', day:'numeric', month:'long', year:'numeric' })
         : '—';
     document.getElementById('summary-date').textContent = dateStr;
 
-    // Time
     const fmt = t => {
         const [h, m] = t.split(':');
         const hh = parseInt(h);
@@ -786,18 +733,10 @@ function generateTicket() {
     const total = calcTotal();
     const tv    = totalVisitors();
 
-    if (tv === 0) {
-        alert('Pilih setidaknya 1 pengunjung!');
-        return;
-    }
-
+    if (tv === 0) { alert('Pilih setidaknya 1 pengunjung!'); return; }
     const dateEl  = document.getElementById('visit-date');
-    if (!dateEl.value) {
-        alert('Pilih tanggal kunjungan!');
-        return;
-    }
+    if (!dateEl.value) { alert('Pilih tanggal kunjungan!'); return; }
 
-    // Generate unique booking ID
     state.bookingId = 'AZ' + Math.floor(Math.random() * 9000000000 + 1000000000);
 
     const dateFormatted = new Date(dateEl.value + 'T00:00:00').toLocaleDateString('id-ID', {
@@ -812,7 +751,6 @@ function generateTicket() {
         return `${String(h12).padStart(2,'0')}:${m} ${suffix}`;
     };
 
-    // Build visitor summary text
     const parts = [];
     if (state.counts.adult > 0)   parts.push(`${state.counts.adult} Dewasa`);
     if (state.counts.child > 0)   parts.push(`${state.counts.child} Anak`);
@@ -820,28 +758,23 @@ function generateTicket() {
     if (state.counts.family > 0)  parts.push(`${state.counts.family} Paket Keluarga`);
     const visitorText = `${tv} orang (${parts.join(', ')})`;
 
-    // Fill ticket
     document.getElementById('ticket-date').textContent     = dateFormatted;
     document.getElementById('ticket-time').textContent     = `${fmt(state.slot.start)} – ${fmt(state.slot.end)}`;
     document.getElementById('ticket-visitors').textContent = visitorText;
     document.getElementById('ticket-booking-id').textContent = state.bookingId;
     document.getElementById('ticket-total-display').textContent = `$${total.toFixed(2)}`;
 
-    // QR Code
     const qrData = `FaunaZoo|${state.bookingId}|${dateEl.value}|${state.slot.start}|${tv}`;
     document.getElementById('ticket-qr').src =
         `https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(qrData)}&color=166534&bgcolor=f0fdf4&margin=4`;
 
-    // Show ticket
     const wrapper = document.getElementById('eticket-wrapper');
     wrapper.classList.remove('hidden');
 
-    // Update button
     const btn = document.getElementById('generate-ticket-btn');
     btn.innerHTML = `<i class="fa-solid fa-rotate-right"></i> Buat Ulang Tiket`;
     btn.classList.add('from-emerald-600', 'to-zoo-500');
 
-    // Scroll to ticket
     wrapper.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
@@ -854,15 +787,12 @@ function downloadTicket() {
     if (!state.bookingId) return;
 
     const element = document.getElementById('ticket-pdf-content');
-
-    // Temporarily show instructions on the live element
     const instructions = element.querySelector('.print-instructions');
     if (instructions) {
         instructions.classList.remove('hidden');
         instructions.classList.add('block');
     }
 
-    // Force animation and transition disable on the live element temporarily
     element.classList.add('no-print-animations');
 
     html2canvas(element, {
@@ -871,7 +801,6 @@ function downloadTicket() {
         backgroundColor: '#ffffff',
         logging: false
     }).then(canvas => {
-        // Hide instructions again immediately
         if (instructions) {
             instructions.classList.add('hidden');
             instructions.classList.remove('block');
@@ -879,22 +808,16 @@ function downloadTicket() {
         element.classList.remove('no-print-animations');
 
         const imgData = canvas.toDataURL('image/jpeg', 0.98);
-        
-        // Use jsPDF directly from window.jspdf
         const { jsPDF } = window.jspdf;
         const pdf = new jsPDF('p', 'mm', 'a4');
         
-        // A4 page width = 210mm. Margins are 15mm left and right.
-        // So image width is 210 - 2*15 = 180mm.
         const imgWidth = 180;
         const imgHeight = (canvas.height * imgWidth) / canvas.width;
         
-        // Center the image horizontally (15mm margin) and position it at 15mm from top
         pdf.addImage(imgData, 'JPEG', 15, 15, imgWidth, imgHeight);
         pdf.save(`ticket-${state.bookingId}.pdf`);
     }).catch(err => {
         console.error(err);
-        // Clean up in case of error
         if (instructions) {
             instructions.classList.add('hidden');
             instructions.classList.remove('block');
