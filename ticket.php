@@ -35,7 +35,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     } else {
         echo json_encode(['status' => 'error', 'message' => 'Gagal menyimpan ke database: ' . mysqli_error($conn)]);
     }
-    exit; // Menghentikan rendering HTML karena ini request AJAX respon JSON
+    exit; 
 }
 ?>
 <!DOCTYPE html>
@@ -496,7 +496,7 @@ function updateSummary() {
 }
 
 // ===============================================
-// LOGIKA GENERATE TIKET + AJAX INSERT KE DATABASE
+// GENERATE TIKET + AJAX INSERT KE DATABASE
 // ===============================================
 function generateTicket() {
     const total = calcTotal();
@@ -512,7 +512,7 @@ function generateTicket() {
     // Membuat ID Booking unik untuk Primary Key
     const bookingId = 'AZ' + Math.floor(Math.random() * 9000000000 + 1000000000);
 
-    // Mempersiapkan Form Data untuk dikirim via AJAX POST
+    // prep
     const formData = new FormData();
     formData.append('action', 'insert_ticket');
     formData.append('booking_id', bookingId);
@@ -524,7 +524,7 @@ function generateTicket() {
     formData.append('count_family', state.counts.family);
     formData.append('total_price', total);
 
-    // Kirim data ke file ini sendiri via Fetch API
+    // Kirim data ke file via Fetch API
     fetch(window.location.href, {
         method: 'POST',
         body: formData
