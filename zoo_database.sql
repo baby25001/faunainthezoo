@@ -80,6 +80,22 @@ CREATE TABLE IF NOT EXISTS pemberian_pakan (
         ON DELETE CASCADE ON UPDATE CASCADE
 );
 
+USE faunainthezoo;
+
+CREATE TABLE IF NOT EXISTS tickets (
+    booking_id VARCHAR(20) PRIMARY KEY,
+    id_user INT,
+    booking_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    visit_date DATE NOT NULL,
+    time_session VARCHAR(50) NOT NULL,
+    count_adult INT DEFAULT 0,
+    count_child INT DEFAULT 0,
+    count_student INT DEFAULT 0,
+    count_family INT DEFAULT 0,
+    total_price DECIMAL(10,2) NOT NULL,
+    FOREIGN KEY (id_user) REFERENCES users(id_user) ON DELETE SET NULL
+);
+
 -- =============================================
 -- SEEDER DATA (PENGISIAN DATA)
 -- =============================================
