@@ -64,7 +64,7 @@ function fmt12($t) {
     return sprintf('%02d:%s %s', $h12, $m, $s);
 }
 
-// Catatan: Fungsi getTaskName lama telah dihapus karena sekarang semua task adalah 'Feeding'
+
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -173,7 +173,7 @@ function fmt12($t) {
                     foreach ($jadwal as $idx => $j):
                         $is_done = $j['status'] === 'done';
                         
-                        // Set nilai statis sesuai permintaan Anda
+                
                         $keeper = 'Keeper 1';
                         $task   = 'Feeding';
                     ?>
